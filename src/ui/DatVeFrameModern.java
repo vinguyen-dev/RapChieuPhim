@@ -254,7 +254,7 @@ public class DatVeFrameModern extends JFrame {
     }
 
     private JPanel createBottomPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(15, 0));
         panel.setOpaque(false);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
 
@@ -269,10 +269,39 @@ public class DatVeFrameModern extends JFrame {
         legendPanel.add(createLegendItem("Trống", UIStyles.SEAT_AVAILABLE));
         legendPanel.add(createLegendItem("Đã chọn", UIStyles.SEAT_SELECTED));
         legendPanel.add(createLegendItem("Đã đặt", UIStyles.SEAT_OCCUPIED));
-        legendPanel.add(createLegendItem("VIP", UIStyles.SEAT_VIP));
-        legendPanel.add(createLegendItem("💑 Couple", new Color(233, 30, 99)));
+        legendPanel.add(createLegendItem("VIP (+20%)", UIStyles.SEAT_VIP));
+        legendPanel.add(createLegendItem("💑 Couple (x2)", new Color(233, 30, 99)));
 
         panel.add(legendPanel, BorderLayout.CENTER);
+
+        // Pricing info panel
+        JPanel pricingPanel = new JPanel();
+        pricingPanel.setLayout(new BoxLayout(pricingPanel, BoxLayout.Y_AXIS));
+        pricingPanel.setBackground(new Color(255, 248, 225));
+        pricingPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(255, 193, 7), 2),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+
+        JLabel lblPricingTitle = new JLabel("💰 Bảng Giá");
+        lblPricingTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblPricingTitle.setForeground(new Color(230, 126, 34));
+        lblPricingTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblPricingInfo = new JLabel("<html>" +
+            "• Ghế Thường: Giá cơ bản<br>" +
+            "• Ghế VIP: Giá cơ bản + 20%<br>" +
+            "• Ghế Couple: Giá cơ bản × 2" +
+            "</html>");
+        lblPricingInfo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblPricingInfo.setForeground(new Color(51, 51, 51));
+        lblPricingInfo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        pricingPanel.add(lblPricingTitle);
+        pricingPanel.add(Box.createVerticalStrut(5));
+        pricingPanel.add(lblPricingInfo);
+
+        panel.add(pricingPanel, BorderLayout.EAST);
 
         return panel;
     }
@@ -471,12 +500,13 @@ public class DatVeFrameModern extends JFrame {
     private void updateBookingSummary() {
         tableModelVeDaDat.setRowCount(0);
         double tongTien = 0;
+        double giaCoban = lichChieuHienTai.getGiaVe();
 
         for (int maGhe : selectedSeats) {
             SeatButton btn = seatButtons.get(maGhe);
             if (btn != null) {
                 Ghe ghe = btn.getGhe();
-                double giaVe = lichChieuHienTai.getGiaVe();
+                double giaVe = tinhGiaVe(giaCoban, ghe.getLoaiGhe());
 
                 Object[] row = {
                     ghe.getSoGhe(),
@@ -490,6 +520,30 @@ public class DatVeFrameModern extends JFrame {
         }
 
         lblTongTien.setText(String.format("Tổng Tiền: %.0f VNĐ", tongTien));
+    }
+
+    /**
+     * Tính giá vé dựa trên loại ghế
+     * - Ghế Thường: giá cơ bản
+     * - Ghế VIP: giá cơ bản + 20%
+     * - Ghế Couple: giá cơ bản x 2
+     *
+     * @param giaCoBan Giá vé cơ bản từ lịch chiếu
+     * @param loaiGhe Loại ghế (Thuong, VIP, Couple)
+     * @return Giá vé đã được điều chỉnh
+     */
+    private double tinhGiaVe(double giaCoBan, String loaiGhe) {
+        if (loaiGhe == null) return giaCoBan;
+
+        switch (loaiGhe) {
+            case "VIP":
+                return giaCoBan * 1.2; // VIP: +20%
+            case "Couple":
+                return giaCoBan * 2.0; // Couple: x2
+            case "Thuong":
+            default:
+                return giaCoBan; // Regular price
+        }
     }
 
     private void resetSelection() {
@@ -537,10 +591,18 @@ public class DatVeFrameModern extends JFrame {
             }
         }
 
-        // Book seats
+        // Book seats with dynamic pricing based on seat type
         boolean success = true;
+        double giaCoban = lichChieuHienTai.getGiaVe(); // Base price
+
         for (int maGhe : selectedSeats) {
-            double giaVe = lichChieuHienTai.getGiaVe();
+            // Get seat info to determine price
+            SeatButton seatBtn = seatButtons.get(maGhe);
+            if (seatBtn == null) continue;
+
+            Ghe ghe = seatBtn.getGhe();
+            double giaVe = tinhGiaVe(giaCoban, ghe.getLoaiGhe());
+
             if (!veDAO.datVe(lichChieuHienTai.getMaLichChieu(), maGhe, hoaDonHienTai.getMaHoaDon(), giaVe)) {
                 success = false;
                 break;
