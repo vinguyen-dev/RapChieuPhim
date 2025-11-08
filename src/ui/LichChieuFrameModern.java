@@ -168,6 +168,7 @@ public class LichChieuFrameModern extends JFrame {
 
         cboPhim = new JComboBox<>();
         UIStyles.styleComboBox(cboPhim);
+        cboPhim.setPreferredSize(new Dimension(300, 36));
         gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 1.0;
         panel.add(cboPhim, gbc);
 
@@ -179,6 +180,7 @@ public class LichChieuFrameModern extends JFrame {
 
         cboPhongChieu = new JComboBox<>();
         UIStyles.styleComboBox(cboPhongChieu);
+        cboPhongChieu.setPreferredSize(new Dimension(200, 36));
         gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0;
         panel.add(cboPhongChieu, gbc);
 
@@ -291,7 +293,7 @@ public class LichChieuFrameModern extends JFrame {
         buttonPanel.add(btnXoa);
         buttonPanel.add(btnLamMoi);
 
-        gbc.gridx = 1; gbc.gridy = 3; gbc.gridwidth = 3; gbc.weightx = 1.0;
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 4; gbc.weightx = 1.0;
         panel.add(buttonPanel, gbc);
 
         return panel;
