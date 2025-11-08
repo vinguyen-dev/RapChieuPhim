@@ -12,7 +12,6 @@ public class JDBCUtil {
                     "trustServerCertificate=true;";
     private static final String USERNAME = "sa";
     private static final String PASSWORD = "sapassword";
-    private static Connection connection = null;
 
     static {
         try {
@@ -22,22 +21,14 @@ public class JDBCUtil {
         }
     }
 
-    public static Connection getConnection() {
-        if (connection == null) {
-            try {
-                connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        return connection;
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USERNAME, PASSWORD);
     }
 
-    public static void closeConnection() {
-        if (connection != null) {
+    public static void closeConnection(Connection conn) {
+        if (conn != null) {
             try {
-                connection.close();
-                connection = null;
+                conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -45,12 +36,15 @@ public class JDBCUtil {
     }
     
     public static void main(String[] args) {
-        Connection conn = JDBCUtil.getConnection();
-        if (conn != null) {
-            System.out.println("Connection established successfully.");
-            JDBCUtil.closeConnection();
-        } else {
+        try {
+            Connection conn = JDBCUtil.getConnection();
+            if (conn != null) {
+                System.out.println("Connection established successfully.");
+                JDBCUtil.closeConnection(conn);
+            }
+        } catch (SQLException e) {
             System.out.println("Failed to establish connection.");
+            e.printStackTrace();
         }
     }
 }
