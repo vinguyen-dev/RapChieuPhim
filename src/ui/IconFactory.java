@@ -416,4 +416,18 @@ public class IconFactory {
             public int getIconHeight() { return size; }
         };
     }
+
+    /**
+     * Alias for createPeopleIcon (for compatibility)
+     */
+    public static Icon createUserIcon(int size, Color color) {
+        return createPeopleIcon(size, color);
+    }
+
+    /**
+     * Alias for createInvoiceIcon (for compatibility)
+     */
+    public static Icon createReceiptIcon(int size, Color color) {
+        return createInvoiceIcon(size, color);
+    }
 }
