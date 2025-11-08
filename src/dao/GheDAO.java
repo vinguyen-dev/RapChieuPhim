@@ -204,4 +204,77 @@ public class GheDAO implements IGheDAO {
         ghe.setPhongChieu(phongChieu);
         return ghe;
     }
+
+    /**
+     * Tạo ghế tự động cho phòng chiếu theo layout chuẩn
+     * Layout: 6 hàng (A-F) x 10 cột (1-10)
+     * - Hàng A, B, F: Ghế thường
+     * - Hàng C, D: Ghế VIP
+     * - Hàng E: Ghế Couple
+     *
+     * @param maPhong Mã phòng chiếu cần tạo ghế
+     * @return true nếu tạo thành công, false nếu thất bại
+     */
+    public boolean taoGheChoPhong(int maPhong) {
+        try (Connection conn = JDBCUtil.getConnection()) {
+            // Check if room already has seats
+            String checkSql = "SELECT COUNT(*) FROM Ghe WHERE maPhong = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setInt(1, maPhong);
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    System.out.println("Phòng " + maPhong + " đã có ghế, không tạo lại.");
+                    return true; // Already has seats
+                }
+            }
+
+            // Create seats for room (6 rows x 10 columns)
+            String insertSql = "INSERT INTO Ghe (maPhong, soGhe, hang, loaiGhe) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
+                int seatCount = 0;
+
+                for (char hang = 'A'; hang <= 'F'; hang++) {
+                    for (int cot = 1; cot <= 10; cot++) {
+                        String soGhe = hang + String.valueOf(cot);
+                        String loaiGhe;
+
+                        // Determine seat type based on row
+                        if (hang == 'C' || hang == 'D') {
+                            loaiGhe = "VIP";
+                        } else if (hang == 'E') {
+                            loaiGhe = "Couple";
+                        } else {
+                            loaiGhe = "Thuong";
+                        }
+
+                        stmt.setInt(1, maPhong);
+                        stmt.setString(2, soGhe);
+                        stmt.setString(3, String.valueOf(hang));
+                        stmt.setString(4, loaiGhe);
+                        stmt.addBatch();
+                        seatCount++;
+                    }
+                }
+
+                int[] results = stmt.executeBatch();
+                System.out.println("Đã tạo " + seatCount + " ghế cho phòng " + maPhong);
+                return results.length == seatCount;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Kiểm tra và tạo ghế tự động nếu phòng chưa có ghế
+     * @param maPhong Mã phòng cần kiểm tra
+     */
+    public void kiemTraVaTaoGhe(int maPhong) {
+        List<Ghe> danhSachGhe = layDanhSachGheTheoPhong(maPhong);
+        if (danhSachGhe.isEmpty()) {
+            System.out.println("Phòng " + maPhong + " chưa có ghế. Đang tạo ghế tự động...");
+            taoGheChoPhong(maPhong);
+        }
+    }
 }
