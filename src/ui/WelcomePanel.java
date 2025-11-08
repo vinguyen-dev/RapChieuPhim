@@ -219,7 +219,8 @@ public class WelcomePanel extends JPanel {
                 isHovered[0] = true;
                 shadowSize[0] = 8;
                 card.repaint();
-                AnimationUtils.scaleUp(card, 1.02f, 200);
+                // Simple scale effect without animation (more stable)
+                card.setBorder(BorderFactory.createEmptyBorder(-2, -2, -2, -2));
             }
 
             @Override
@@ -227,18 +228,31 @@ public class WelcomePanel extends JPanel {
                 isHovered[0] = false;
                 shadowSize[0] = 4;
                 card.repaint();
-                AnimationUtils.scaleDown(card, 200);
+                card.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
             }
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                AnimationUtils.flash(card, accentColor, 300);
-                Timer clickDelay = new Timer(150, evt -> {
-                    action.run();
-                    ((Timer) evt.getSource()).stop();
+                // Flash effect on click
+                final Color originalBg = ModernUIStyles.BG_CARD;
+                Timer flashTimer = new Timer(50, null);
+                final int[] flashCount = {0};
+
+                flashTimer.addActionListener(evt -> {
+                    flashCount[0]++;
+                    if (flashCount[0] % 2 == 0) {
+                        card.setBackground(originalBg);
+                    } else {
+                        card.setBackground(accentColor.brighter());
+                    }
+
+                    if (flashCount[0] >= 4) {
+                        flashTimer.stop();
+                        card.setBackground(originalBg);
+                        action.run();
+                    }
                 });
-                clickDelay.setRepeats(false);
-                clickDelay.start();
+                flashTimer.start();
             }
         });
 

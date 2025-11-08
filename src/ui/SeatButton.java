@@ -29,19 +29,20 @@ public class SeatButton extends JButton {
         // Couple seats are wider
         boolean isCouple = "Couple".equalsIgnoreCase(ghe.getLoaiGhe());
         if (isCouple) {
-            setPreferredSize(new Dimension(95, 45));  // Double width + gap
-            setMinimumSize(new Dimension(95, 45));
-            setMaximumSize(new Dimension(95, 45));
+            setPreferredSize(new Dimension(105, 48));  // Double width + gap
+            setMinimumSize(new Dimension(105, 48));
+            setMaximumSize(new Dimension(105, 48));
+            setFont(new Font("Segoe UI", Font.BOLD, 10));
         } else {
-            setPreferredSize(new Dimension(45, 45));
-            setMinimumSize(new Dimension(45, 45));
-            setMaximumSize(new Dimension(45, 45));
+            setPreferredSize(new Dimension(50, 48));  // Wider to fit E10
+            setMinimumSize(new Dimension(50, 48));
+            setMaximumSize(new Dimension(50, 48));
+            setFont(new Font("Segoe UI", Font.BOLD, 10));
         }
 
         setFocusPainted(false);
         setBorderPainted(false);
         setCursor(new Cursor(Cursor.HAND_CURSOR));
-        setFont(new Font("Segoe UI", Font.BOLD, 11));
 
         updateAppearance();
         updateTooltip();
