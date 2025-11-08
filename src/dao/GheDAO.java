@@ -243,8 +243,8 @@ public class GheDAO implements IGheDAO {
                 }
             }
 
-            // Calculate layout based on total seats
-            // Prefer 10 columns layout (like real cinema)
+            // Calculate optimal layout based on total seats
+            // Standard cinema layout: prefer 10 columns
             int cols = 10;
             int rows = (int) Math.ceil((double) totalSeats / cols);
 
@@ -254,9 +254,13 @@ public class GheDAO implements IGheDAO {
                 cols = (int) Math.ceil((double) totalSeats / rows);
             }
 
-            System.out.println("Tạo " + totalSeats + " ghế cho " + roomName + " (" + rows + " hàng x " + cols + " cột)");
+            // Calculate seats per row for balanced distribution
+            int baseSeatsPerRow = totalSeats / rows;
+            int extraSeats = totalSeats % rows; // Extra seats to distribute
 
-            // Create seats
+            System.out.println("Tạo " + totalSeats + " ghế cho " + roomName + " (" + rows + " hàng, ~" + baseSeatsPerRow + " ghế/hàng)");
+
+            // Create seats with balanced distribution
             String insertSql = "INSERT INTO Ghe (maPhong, soGhe, hang, loaiGhe) VALUES (?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
                 int seatCount = 0;
@@ -267,7 +271,17 @@ public class GheDAO implements IGheDAO {
                 for (int r = 0; r < rows && seatCount < totalSeats; r++) {
                     char hang = (char) ('A' + r);
 
-                    for (int c = 1; c <= cols && seatCount < totalSeats; c++) {
+                    // Calculate seats for this row (distribute extra seats evenly)
+                    int seatsInThisRow = baseSeatsPerRow;
+                    if (r < extraSeats) {
+                        seatsInThisRow++; // Give extra seats to first rows
+                    }
+
+                    // Cap at maximum columns
+                    if (seatsInThisRow > cols) seatsInThisRow = cols;
+
+                    // Create seats for this row
+                    for (int c = 1; c <= seatsInThisRow && seatCount < totalSeats; c++) {
                         String soGhe = hang + String.valueOf(c);
                         String loaiGhe;
 
