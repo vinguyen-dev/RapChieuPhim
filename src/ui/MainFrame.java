@@ -67,6 +67,10 @@ public class MainFrame extends JFrame {
         JMenu menuHeThong = new JMenu("Hệ Thống");
         menuHeThong.setFont(UIStyles.FONT_SUBHEADER);
 
+        JMenuItem itemDashboard = new JMenuItem("Dashboard & Thống Kê");
+        itemDashboard.setFont(UIStyles.FONT_NORMAL);
+        itemDashboard.addActionListener(e -> openDashboard());
+
         JMenuItem itemThoat = new JMenuItem("Thoát");
         itemThoat.setFont(UIStyles.FONT_NORMAL);
         itemThoat.addActionListener(e -> {
@@ -74,6 +78,9 @@ public class MainFrame extends JFrame {
                 System.exit(0);
             }
         });
+
+        menuHeThong.add(itemDashboard);
+        menuHeThong.addSeparator();
         menuHeThong.add(itemThoat);
 
         menuBar.add(menuQuanLy);
@@ -247,6 +254,11 @@ public class MainFrame extends JFrame {
 
     private void openHoaDonFrame() {
         HoaDonFrame frame = new HoaDonFrame();
+        frame.setVisible(true);
+    }
+
+    private void openDashboard() {
+        DashboardFrame frame = new DashboardFrame();
         frame.setVisible(true);
     }
 
