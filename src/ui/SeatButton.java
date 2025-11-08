@@ -1,0 +1,127 @@
+package ui;
+
+import entity.Ghe;
+
+import javax.swing.*;
+import java.awt.*;
+
+/**
+ * Custom button component representing a cinema seat
+ */
+public class SeatButton extends JButton {
+    private Ghe ghe;
+    private SeatStatus status;
+
+    public enum SeatStatus {
+        AVAILABLE,
+        SELECTED,
+        OCCUPIED,
+        VIP_AVAILABLE,
+        VIP_SELECTED
+    }
+
+    public SeatButton(Ghe ghe, SeatStatus initialStatus) {
+        this.ghe = ghe;
+        this.status = initialStatus;
+
+        setPreferredSize(new Dimension(45, 45));
+        setMinimumSize(new Dimension(45, 45));
+        setMaximumSize(new Dimension(45, 45));
+        setFocusPainted(false);
+        setBorderPainted(false);
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+        setFont(new Font("Segoe UI", Font.BOLD, 11));
+
+        updateAppearance();
+        updateTooltip();
+    }
+
+    public void setStatus(SeatStatus status) {
+        this.status = status;
+        updateAppearance();
+    }
+
+    public SeatStatus getStatus() {
+        return status;
+    }
+
+    public Ghe getGhe() {
+        return ghe;
+    }
+
+    private void updateAppearance() {
+        setText(ghe.getSoGhe());
+
+        switch (status) {
+            case AVAILABLE:
+                setBackground(UIStyles.SEAT_AVAILABLE);
+                setForeground(Color.WHITE);
+                setEnabled(true);
+                break;
+            case SELECTED:
+                setBackground(UIStyles.SEAT_SELECTED);
+                setForeground(Color.WHITE);
+                setEnabled(true);
+                break;
+            case OCCUPIED:
+                setBackground(UIStyles.SEAT_OCCUPIED);
+                setForeground(Color.WHITE);
+                setEnabled(false);
+                break;
+            case VIP_AVAILABLE:
+                setBackground(UIStyles.SEAT_VIP);
+                setForeground(Color.WHITE);
+                setEnabled(true);
+                break;
+            case VIP_SELECTED:
+                setBackground(UIStyles.PRIMARY_DARK);
+                setForeground(Color.WHITE);
+                setEnabled(true);
+                break;
+        }
+    }
+
+    private void updateTooltip() {
+        String statusText;
+        switch (status) {
+            case AVAILABLE:
+            case VIP_AVAILABLE:
+                statusText = "Trống";
+                break;
+            case SELECTED:
+            case VIP_SELECTED:
+                statusText = "Đã chọn";
+                break;
+            case OCCUPIED:
+                statusText = "Đã đặt";
+                break;
+            default:
+                statusText = "";
+        }
+
+        setToolTipText(String.format("Ghế %s - Hàng %s - %s - %s",
+            ghe.getSoGhe(), ghe.getHang(), ghe.getLoaiGhe(), statusText));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Draw rounded background
+        g2d.setColor(getBackground());
+        g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+
+        // Draw border for selected seats
+        if (status == SeatStatus.SELECTED || status == SeatStatus.VIP_SELECTED) {
+            g2d.setColor(Color.WHITE);
+            g2d.setStroke(new BasicStroke(2));
+            g2d.drawRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 8, 8);
+        }
+
+        g2d.dispose();
+
+        // Draw text
+        super.paintComponent(g);
+    }
+}

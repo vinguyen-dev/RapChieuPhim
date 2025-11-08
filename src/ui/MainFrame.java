@@ -7,10 +7,11 @@ public class MainFrame extends JFrame {
     private JPanel contentPanel;
 
     public MainFrame() {
-        setTitle("Hệ Thống Quản Lý Rạp Chiếu Phim");
-        setSize(1200, 700);
+        setTitle("Hệ Thống Quản Lý Rạp Chiếu Phim - Cinema Management System");
+        setSize(1400, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setBackground(UIStyles.BG_PRIMARY);
 
         initComponents();
     }
@@ -18,13 +19,23 @@ public class MainFrame extends JFrame {
     private void initComponents() {
         // Menu Bar
         JMenuBar menuBar = new JMenuBar();
+        menuBar.setBackground(UIStyles.BG_SECONDARY);
+        menuBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIStyles.PRIMARY_COLOR));
+        menuBar.setFont(UIStyles.FONT_NORMAL);
 
         // Menu Quản lý
-        JMenu menuQuanLy = new JMenu("Quản Lý");
-        JMenuItem itemPhim = new JMenuItem("Quản Lý Phim");
-        JMenuItem itemPhongChieu = new JMenuItem("Quản Lý Phòng Chiếu");
-        JMenuItem itemLichChieu = new JMenuItem("Quản Lý Lịch Chiếu");
-        JMenuItem itemKhachHang = new JMenuItem("Quản Lý Khách Hàng");
+        JMenu menuQuanLy = new JMenu("📋 Quản Lý");
+        menuQuanLy.setFont(UIStyles.FONT_SUBHEADER);
+
+        JMenuItem itemPhim = new JMenuItem("🎬 Quản Lý Phim");
+        JMenuItem itemPhongChieu = new JMenuItem("🎭 Quản Lý Phòng Chiếu");
+        JMenuItem itemLichChieu = new JMenuItem("📅 Quản Lý Lịch Chiếu");
+        JMenuItem itemKhachHang = new JMenuItem("👥 Quản Lý Khách Hàng");
+
+        itemPhim.setFont(UIStyles.FONT_NORMAL);
+        itemPhongChieu.setFont(UIStyles.FONT_NORMAL);
+        itemLichChieu.setFont(UIStyles.FONT_NORMAL);
+        itemKhachHang.setFont(UIStyles.FONT_NORMAL);
 
         itemPhim.addActionListener(e -> openPhimFrame());
         itemPhongChieu.addActionListener(e -> openPhongChieuFrame());
@@ -37,9 +48,14 @@ public class MainFrame extends JFrame {
         menuQuanLy.add(itemKhachHang);
 
         // Menu Bán vé
-        JMenu menuBanVe = new JMenu("Bán Vé");
-        JMenuItem itemDatVe = new JMenuItem("Đặt Vé");
-        JMenuItem itemHoaDon = new JMenuItem("Quản Lý Hóa Đơn");
+        JMenu menuBanVe = new JMenu("🎫 Bán Vé");
+        menuBanVe.setFont(UIStyles.FONT_SUBHEADER);
+
+        JMenuItem itemDatVe = new JMenuItem("🎟️ Đặt Vé");
+        JMenuItem itemHoaDon = new JMenuItem("🧾 Quản Lý Hóa Đơn");
+
+        itemDatVe.setFont(UIStyles.FONT_NORMAL);
+        itemHoaDon.setFont(UIStyles.FONT_NORMAL);
 
         itemDatVe.addActionListener(e -> openDatVeFrame());
         itemHoaDon.addActionListener(e -> openHoaDonFrame());
@@ -48,14 +64,13 @@ public class MainFrame extends JFrame {
         menuBanVe.add(itemHoaDon);
 
         // Menu Hệ thống
-        JMenu menuHeThong = new JMenu("Hệ Thống");
-        JMenuItem itemThoat = new JMenuItem("Thoát");
+        JMenu menuHeThong = new JMenu("⚙️ Hệ Thống");
+        menuHeThong.setFont(UIStyles.FONT_SUBHEADER);
+
+        JMenuItem itemThoat = new JMenuItem("🚪 Thoát");
+        itemThoat.setFont(UIStyles.FONT_NORMAL);
         itemThoat.addActionListener(e -> {
-            int choice = JOptionPane.showConfirmDialog(this,
-                "Bạn có chắc muốn thoát?",
-                "Xác Nhận",
-                JOptionPane.YES_NO_OPTION);
-            if (choice == JOptionPane.YES_OPTION) {
+            if (UIStyles.showConfirmDialog(this, "Bạn có chắc muốn thoát?")) {
                 System.exit(0);
             }
         });
@@ -66,37 +81,52 @@ public class MainFrame extends JFrame {
         menuBar.add(menuHeThong);
         setJMenuBar(menuBar);
 
-        // Content Panel
-        contentPanel = new JPanel(new BorderLayout());
+        // Content Panel with gradient background
+        contentPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                GradientPaint gp = new GradientPaint(0, 0, UIStyles.BG_PRIMARY, 0, getHeight(), new Color(240, 248, 255));
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        contentPanel.setOpaque(false);
 
-        // Welcome Panel
+        // Welcome Panel with modern header
         JPanel welcomePanel = new JPanel(new BorderLayout());
-        welcomePanel.setBackground(new Color(240, 240, 240));
+        welcomePanel.setOpaque(false);
+        welcomePanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 20, 30));
 
-        JLabel lblWelcome = new JLabel("HỆ THỐNG QUẢN LÝ RẠP CHIẾU PHIM", SwingConstants.CENTER);
-        lblWelcome.setFont(new Font("Arial", Font.BOLD, 28));
-        lblWelcome.setForeground(new Color(51, 51, 51));
-        welcomePanel.add(lblWelcome, BorderLayout.CENTER);
+        JLabel lblWelcome = new JLabel("🎬 HỆ THỐNG QUẢN LÝ RẠP CHIẾU PHIM", SwingConstants.CENTER);
+        UIStyles.styleTitleLabel(lblWelcome);
+        lblWelcome.setForeground(UIStyles.PRIMARY_DARK);
 
-        // Quick Access Panel
-        JPanel quickAccessPanel = new JPanel(new GridLayout(2, 3, 20, 20));
-        quickAccessPanel.setBorder(BorderFactory.createEmptyBorder(50, 100, 50, 100));
-        quickAccessPanel.setBackground(new Color(240, 240, 240));
+        JLabel lblSubtitle = new JLabel("Cinema Management System - Quản lý chuyên nghiệp, hiệu quả", SwingConstants.CENTER);
+        lblSubtitle.setFont(UIStyles.FONT_NORMAL);
+        lblSubtitle.setForeground(UIStyles.TEXT_SECONDARY);
 
-        // Buttons
-        JButton btnPhim = createQuickAccessButton("Quản Lý Phim", "Thêm, sửa, xóa phim");
-        JButton btnPhongChieu = createQuickAccessButton("Phòng Chiếu", "Quản lý phòng chiếu");
-        JButton btnLichChieu = createQuickAccessButton("Lịch Chiếu", "Lập lịch chiếu phim");
-        JButton btnDatVe = createQuickAccessButton("Đặt Vé", "Đặt vé xem phim");
-        JButton btnKhachHang = createQuickAccessButton("Khách Hàng", "Quản lý khách hàng");
-        JButton btnHoaDon = createQuickAccessButton("Hóa Đơn", "Quản lý hóa đơn");
+        JPanel headerPanel = new JPanel(new GridLayout(2, 1, 0, 5));
+        headerPanel.setOpaque(false);
+        headerPanel.add(lblWelcome);
+        headerPanel.add(lblSubtitle);
 
-        btnPhim.addActionListener(e -> openPhimFrame());
-        btnPhongChieu.addActionListener(e -> openPhongChieuFrame());
-        btnLichChieu.addActionListener(e -> openLichChieuFrame());
-        btnDatVe.addActionListener(e -> openDatVeFrame());
-        btnKhachHang.addActionListener(e -> openKhachHangFrame());
-        btnHoaDon.addActionListener(e -> openHoaDonFrame());
+        welcomePanel.add(headerPanel, BorderLayout.CENTER);
+
+        // Quick Access Panel with modern cards
+        JPanel quickAccessPanel = new JPanel(new GridLayout(2, 3, 25, 25));
+        quickAccessPanel.setBorder(BorderFactory.createEmptyBorder(20, 80, 80, 80));
+        quickAccessPanel.setOpaque(false);
+
+        // Create modern card buttons
+        JPanel btnPhim = createModernCard("🎬", "Quản Lý Phim", "Thêm, sửa, xóa phim", UIStyles.PRIMARY_COLOR, e -> openPhimFrame());
+        JPanel btnPhongChieu = createModernCard("🎭", "Phòng Chiếu", "Quản lý phòng chiếu", new Color(156, 39, 176), e -> openPhongChieuFrame());
+        JPanel btnLichChieu = createModernCard("📅", "Lịch Chiếu", "Lập lịch chiếu phim", new Color(0, 150, 136), e -> openLichChieuFrame());
+        JPanel btnDatVe = createModernCard("🎟️", "Đặt Vé", "Đặt vé xem phim", UIStyles.ACCENT_COLOR, e -> openDatVeFrame());
+        JPanel btnKhachHang = createModernCard("👥", "Khách Hàng", "Quản lý khách hàng", new Color(63, 81, 181), e -> openKhachHangFrame());
+        JPanel btnHoaDon = createModernCard("🧾", "Hóa Đơn", "Quản lý hóa đơn", UIStyles.SUCCESS_COLOR, e -> openHoaDonFrame());
 
         quickAccessPanel.add(btnPhim);
         quickAccessPanel.add(btnPhongChieu);
@@ -111,29 +141,80 @@ public class MainFrame extends JFrame {
         add(contentPanel);
     }
 
-    private JButton createQuickAccessButton(String title, String description) {
-        JButton button = new JButton("<html><center><b>" + title + "</b><br><small>" + description + "</small></center></html>");
-        button.setFont(new Font("Arial", Font.PLAIN, 14));
-        button.setFocusPainted(false);
-        button.setBackground(new Color(66, 133, 244));
-        button.setForeground(Color.WHITE);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(66, 133, 244), 2),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
+    private JPanel createModernCard(String icon, String title, String description, Color accentColor, java.awt.event.ActionListener action) {
+        JPanel card = new JPanel(new BorderLayout(0, 10)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Hover effect
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(51, 103, 214));
+                // Draw shadow
+                g2d.setColor(new Color(0, 0, 0, 20));
+                g2d.fillRoundRect(4, 4, getWidth() - 8, getHeight() - 8, 15, 15);
+
+                // Draw card background
+                g2d.setColor(UIStyles.BG_SECONDARY);
+                g2d.fillRoundRect(0, 0, getWidth() - 8, getHeight() - 8, 15, 15);
+
+                // Draw accent top border
+                g2d.setColor(accentColor);
+                g2d.fillRoundRect(0, 0, getWidth() - 8, 8, 15, 15);
+
+                g2d.dispose();
             }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(66, 133, 244));
+        };
+        card.setOpaque(false);
+        card.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
+        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Icon label
+        JLabel lblIcon = new JLabel(icon, SwingConstants.CENTER);
+        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
+
+        // Title label
+        JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
+        lblTitle.setFont(UIStyles.FONT_HEADER);
+        lblTitle.setForeground(UIStyles.TEXT_PRIMARY);
+
+        // Description label
+        JLabel lblDesc = new JLabel("<html><center>" + description + "</center></html>", SwingConstants.CENTER);
+        lblDesc.setFont(UIStyles.FONT_SMALL);
+        lblDesc.setForeground(UIStyles.TEXT_SECONDARY);
+
+        // Layout
+        JPanel contentPanel = new JPanel(new GridLayout(3, 1, 0, 5));
+        contentPanel.setOpaque(false);
+        contentPanel.add(lblIcon);
+        contentPanel.add(lblTitle);
+        contentPanel.add(lblDesc);
+
+        card.add(contentPanel, BorderLayout.CENTER);
+
+        // Click handler
+        card.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                action.actionPerformed(new java.awt.event.ActionEvent(card, 0, ""));
+            }
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                card.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(accentColor, 2),
+                    BorderFactory.createEmptyBorder(13, 18, 18, 18)
+                ));
+                lblTitle.setForeground(accentColor);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                card.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
+                lblTitle.setForeground(UIStyles.TEXT_PRIMARY);
             }
         });
 
-        return button;
+        return card;
     }
 
     private void openPhimFrame() {
@@ -157,7 +238,7 @@ public class MainFrame extends JFrame {
     }
 
     private void openDatVeFrame() {
-        DatVeFrame frame = new DatVeFrame();
+        DatVeFrameModern frame = new DatVeFrameModern();
         frame.setVisible(true);
     }
 
