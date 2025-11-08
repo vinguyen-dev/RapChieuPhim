@@ -7,187 +7,228 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 
 /**
- * Card component for displaying movie information with poster
+ * Netflix-style movie card component with poster and hover overlay
  */
 public class MovieCard extends JPanel {
     private Phim phim;
     private JLabel lblPoster;
-    private JLabel lblTitle;
-    private JLabel lblInfo;
+    private JPanel overlayPanel;
     private boolean isSelected = false;
-    private Color borderColor = new Color(224, 224, 224);
+    private boolean isHovered = false;
+    private Image posterImage;
+
+    private static final int CARD_WIDTH = 220;
+    private static final int CARD_HEIGHT = 330;
+    private static final int CORNER_RADIUS = 8;
 
     public MovieCard(Phim phim) {
         this.phim = phim;
 
-        setLayout(new BorderLayout(0, 8));
-        setBackground(UIStyles.BG_SECONDARY);
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(borderColor, 1),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        setPreferredSize(new Dimension(200, 340));
+        setLayout(null); // Absolute positioning for overlay
+        setBackground(new Color(20, 20, 20));
+        setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        setMaximumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
         setCursor(new Cursor(Cursor.HAND_CURSOR));
+        setOpaque(false);
 
         initComponents();
         addHoverEffect();
     }
 
     private void initComponents() {
-        // Poster panel
-        JPanel posterPanel = new JPanel(new BorderLayout());
-        posterPanel.setBackground(UIStyles.BG_SECONDARY);
-        posterPanel.setPreferredSize(new Dimension(180, 260));
-
-        lblPoster = new JLabel();
-        lblPoster.setHorizontalAlignment(SwingConstants.CENTER);
-        lblPoster.setVerticalAlignment(SwingConstants.CENTER);
-        lblPoster.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-
-        // Load poster image
+        // Load poster image first
         loadPoster();
 
-        posterPanel.add(lblPoster, BorderLayout.CENTER);
+        // Poster label (main background)
+        lblPoster = new JLabel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+                // Draw rounded rectangle background
+                g2d.setColor(new Color(40, 40, 40));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS);
+
+                // Draw poster image if available
+                if (posterImage != null) {
+                    g2d.setClip(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS));
+                    g2d.drawImage(posterImage, 0, 0, getWidth(), getHeight(), this);
+                } else {
+                    // Draw placeholder
+                    drawPlaceholder(g2d);
+                }
+
+                // Draw selection border
+                if (isSelected) {
+                    g2d.setColor(new Color(229, 9, 20)); // Netflix red
+                    g2d.setStroke(new BasicStroke(4));
+                    g2d.drawRoundRect(2, 2, getWidth() - 4, getHeight() - 4, CORNER_RADIUS, CORNER_RADIUS);
+                }
+
+                g2d.dispose();
+            }
+        };
+        lblPoster.setBounds(0, 0, CARD_WIDTH, CARD_HEIGHT);
+        add(lblPoster);
+
+        // Overlay panel (shown on hover)
+        overlayPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                if (!isVisible()) return;
+
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Draw dark gradient overlay
+                GradientPaint gradient = new GradientPaint(
+                    0, 0, new Color(0, 0, 0, 0),
+                    0, getHeight(), new Color(0, 0, 0, 220)
+                );
+                g2d.setPaint(gradient);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS);
+
+                g2d.dispose();
+            }
+        };
+        overlayPanel.setLayout(new BorderLayout());
+        overlayPanel.setOpaque(false);
+        overlayPanel.setBounds(0, 0, CARD_WIDTH, CARD_HEIGHT);
+        overlayPanel.setVisible(false);
+
+        // Info panel inside overlay
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setOpaque(false);
+        infoPanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 20, 15));
 
         // Title
-        lblTitle = new JLabel("<html><center>" + phim.getTenPhim() + "</center></html>");
-        lblTitle.setFont(UIStyles.FONT_SUBHEADER);
-        lblTitle.setForeground(UIStyles.TEXT_PRIMARY);
-        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel lblTitle = new JLabel("<html>" + phim.getTenPhim() + "</html>");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setForeground(Color.WHITE);
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Info (Genre and Duration)
-        String infoText = String.format("<html><center>%s<br>%d phút</center></html>",
-            phim.getTheLoai() != null && !phim.getTheLoai().isEmpty() ? phim.getTheLoai() : "Chưa rõ",
-            phim.getThoiLuong());
-        lblInfo = new JLabel(infoText);
-        lblInfo.setFont(UIStyles.FONT_SMALL);
-        lblInfo.setForeground(UIStyles.TEXT_SECONDARY);
-        lblInfo.setHorizontalAlignment(SwingConstants.CENTER);
+        // Genre
+        String genre = phim.getTheLoai() != null && !phim.getTheLoai().isEmpty()
+            ? phim.getTheLoai() : "Chưa rõ";
+        JLabel lblGenre = new JLabel(genre);
+        lblGenre.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblGenre.setForeground(new Color(220, 220, 220));
+        lblGenre.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Info panel
-        JPanel infoPanel = new JPanel(new GridLayout(2, 1, 0, 2));
-        infoPanel.setOpaque(false);
+        // Duration
+        JLabel lblDuration = new JLabel(phim.getThoiLuong() + " phút");
+        lblDuration.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDuration.setForeground(new Color(180, 180, 180));
+        lblDuration.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        infoPanel.add(Box.createVerticalGlue());
         infoPanel.add(lblTitle);
-        infoPanel.add(lblInfo);
+        infoPanel.add(Box.createVerticalStrut(5));
+        infoPanel.add(lblGenre);
+        infoPanel.add(Box.createVerticalStrut(3));
+        infoPanel.add(lblDuration);
 
-        add(posterPanel, BorderLayout.CENTER);
-        add(infoPanel, BorderLayout.SOUTH);
+        overlayPanel.add(infoPanel, BorderLayout.SOUTH);
+        add(overlayPanel);
     }
 
     private void loadPoster() {
         try {
             String imagePath = phim.getHinhAnh();
             if (imagePath != null && !imagePath.isEmpty()) {
-                File imgFile = new File("resources/images/movies/" + imagePath);
+                File imgFile;
+
+                // Check if it's an absolute path first
+                File absoluteFile = new File(imagePath);
+                if (absoluteFile.isAbsolute() && absoluteFile.exists()) {
+                    imgFile = absoluteFile;
+                } else {
+                    // Try relative path from resources/images/movies/
+                    imgFile = new File("resources/images/movies/" + imagePath);
+                }
+
                 if (imgFile.exists()) {
-                    Image img = ImageIO.read(imgFile);
-                    Image scaled = img.getScaledInstance(180, 260, Image.SCALE_SMOOTH);
-                    lblPoster.setIcon(new ImageIcon(scaled));
+                    posterImage = ImageIO.read(imgFile);
                     return;
                 }
             }
         } catch (Exception e) {
-            // Silently fail - will show placeholder
+            System.err.println("Error loading poster for " + phim.getTenPhim() + ": " + e.getMessage());
         }
 
-        // Show placeholder
-        lblPoster.setIcon(createPlaceholderIcon());
+        // posterImage remains null - will show placeholder
+        posterImage = null;
     }
 
-    private Icon createPlaceholderIcon() {
-        return new Icon() {
-            @Override
-            public void paintIcon(Component c, Graphics g, int x, int y) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    private void drawPlaceholder(Graphics2D g2d) {
+        // Dark background
+        g2d.setColor(new Color(40, 40, 40));
+        g2d.fillRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, CORNER_RADIUS, CORNER_RADIUS);
 
-                // Background
-                g2d.setColor(new Color(240, 240, 240));
-                g2d.fillRect(x, y, getIconWidth(), getIconHeight());
+        // Film icon
+        g2d.setColor(new Color(100, 100, 100));
+        g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 64));
+        FontMetrics fm = g2d.getFontMetrics();
+        String icon = "🎬";
+        int textX = (CARD_WIDTH - fm.stringWidth(icon)) / 2;
+        int textY = (CARD_HEIGHT - fm.getHeight()) / 2 + fm.getAscent();
+        g2d.drawString(icon, textX, textY);
 
-                // Film icon
-                g2d.setColor(new Color(180, 180, 180));
-                g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 60));
-                FontMetrics fm = g2d.getFontMetrics();
-                String icon = "🎬";
-                int textX = x + (getIconWidth() - fm.stringWidth(icon)) / 2;
-                int textY = y + ((getIconHeight() - fm.getHeight()) / 2) + fm.getAscent();
-                g2d.drawString(icon, textX, textY);
-
-                // Text
-                g2d.setColor(new Color(150, 150, 150));
-                g2d.setFont(UIStyles.FONT_SMALL);
-                fm = g2d.getFontMetrics();
-                String text = "No Poster";
-                textX = x + (getIconWidth() - fm.stringWidth(text)) / 2;
-                textY = y + getIconHeight() - 20;
-                g2d.drawString(text, textX, textY);
-
-                g2d.dispose();
-            }
-
-            @Override
-            public int getIconWidth() {
-                return 180;
-            }
-
-            @Override
-            public int getIconHeight() {
-                return 260;
-            }
-        };
+        // Text
+        g2d.setColor(new Color(120, 120, 120));
+        g2d.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        fm = g2d.getFontMetrics();
+        String text = "No Poster";
+        textX = (CARD_WIDTH - fm.stringWidth(text)) / 2;
+        textY = CARD_HEIGHT - 30;
+        g2d.drawString(text, textX, textY);
     }
 
     private void addHoverEffect() {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                if (!isSelected) {
-                    borderColor = UIStyles.PRIMARY_COLOR;
-                    setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(borderColor, 2),
-                        BorderFactory.createEmptyBorder(9, 9, 9, 9)
-                    ));
-                    lblTitle.setForeground(UIStyles.PRIMARY_COLOR);
-                }
+                isHovered = true;
+                overlayPanel.setVisible(true);
+                repaint();
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                if (!isSelected) {
-                    borderColor = new Color(224, 224, 224);
-                    setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(borderColor, 1),
-                        BorderFactory.createEmptyBorder(10, 10, 10, 10)
-                    ));
-                    lblTitle.setForeground(UIStyles.TEXT_PRIMARY);
-                }
+                isHovered = false;
+                overlayPanel.setVisible(false);
+                repaint();
             }
         });
     }
 
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        // Paint shadow for depth effect
+        if (isHovered || isSelected) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            // Draw shadow
+            g2d.setColor(new Color(0, 0, 0, 80));
+            g2d.fillRoundRect(4, 4, CARD_WIDTH, CARD_HEIGHT, CORNER_RADIUS, CORNER_RADIUS);
+
+            g2d.dispose();
+        }
+    }
+
     public void setSelected(boolean selected) {
         this.isSelected = selected;
-        if (selected) {
-            borderColor = UIStyles.PRIMARY_DARK;
-            setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(borderColor, 3),
-                BorderFactory.createEmptyBorder(8, 8, 8, 8)
-            ));
-            lblTitle.setForeground(UIStyles.PRIMARY_DARK);
-            lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        } else {
-            borderColor = new Color(224, 224, 224);
-            setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(borderColor, 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-            ));
-            lblTitle.setForeground(UIStyles.TEXT_PRIMARY);
-            lblTitle.setFont(UIStyles.FONT_SUBHEADER);
-        }
+        lblPoster.repaint();
         repaint();
     }
 
@@ -197,11 +238,11 @@ public class MovieCard extends JPanel {
 
     public void updateData(Phim phim) {
         this.phim = phim;
-        lblTitle.setText("<html><center>" + phim.getTenPhim() + "</center></html>");
-        String infoText = String.format("<html><center>%s<br>%d phút</center></html>",
-            phim.getTheLoai() != null && !phim.getTheLoai().isEmpty() ? phim.getTheLoai() : "Chưa rõ",
-            phim.getThoiLuong());
-        lblInfo.setText(infoText);
         loadPoster();
+        // Recreate components with new data
+        removeAll();
+        initComponents();
+        revalidate();
+        repaint();
     }
 }
