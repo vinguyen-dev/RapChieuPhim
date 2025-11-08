@@ -8,6 +8,7 @@ import entity.Ve;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.print.*;
 import java.util.List;
 
 public class HoaDonFrame extends JFrame {
@@ -17,7 +18,7 @@ public class HoaDonFrame extends JFrame {
     private VeDAO veDAO;
 
     private JComboBox<String> cboTrangThai;
-    private JButton btnLoc, btnThanhToan, btnHuy, btnLamMoi;
+    private JButton btnLoc, btnThanhToan, btnHuy, btnLamMoi, btnInHoaDon;
     private JLabel lblTongTien;
 
     public HoaDonFrame() {
@@ -105,12 +106,15 @@ public class HoaDonFrame extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         btnThanhToan = new JButton("Thanh Toán");
         btnHuy = new JButton("Hủy Hóa Đơn");
+        btnInHoaDon = new JButton("In Hóa Đơn");
 
         btnThanhToan.addActionListener(e -> thanhToanHoaDon());
         btnHuy.addActionListener(e -> huyHoaDon());
+        btnInHoaDon.addActionListener(e -> inHoaDon());
 
         buttonPanel.add(btnThanhToan);
         buttonPanel.add(btnHuy);
+        buttonPanel.add(btnInHoaDon);
 
         bottomControlPanel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -255,6 +259,99 @@ public class HoaDonFrame extends JFrame {
                 lblTongTien.setText("Tổng Tiền: 0 VND");
             } else {
                 JOptionPane.showMessageDialog(this, "Hủy hóa đơn thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    /**
+     * In hóa đơn được chọn
+     */
+    private void inHoaDon() {
+        int selectedRow = tableHoaDon.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn cần in!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (tableModelChiTiet.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Hóa đơn không có chi tiết!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Lấy thông tin hóa đơn
+        int maHoaDon = Integer.parseInt(tableModelHoaDon.getValueAt(selectedRow, 0).toString());
+        String tenKhachHang = tableModelHoaDon.getValueAt(selectedRow, 1).toString();
+        String sdt = tableModelHoaDon.getValueAt(selectedRow, 2).toString();
+        String ngayLap = tableModelHoaDon.getValueAt(selectedRow, 3).toString();
+        String tongTien = tableModelHoaDon.getValueAt(selectedRow, 4).toString();
+        String trangThai = tableModelHoaDon.getValueAt(selectedRow, 5).toString();
+
+        // Tạo nội dung in
+        StringBuilder content = new StringBuilder();
+        content.append("═══════════════════════════════════════════════════════════\n");
+        content.append("                    HÓA ĐƠN BÁN VÉ                        \n");
+        content.append("              HỆ THỐNG RẠP CHIẾU PHIM                     \n");
+        content.append("═══════════════════════════════════════════════════════════\n\n");
+        content.append(String.format("Mã Hóa Đơn: %s%n", maHoaDon));
+        content.append(String.format("Ngày Lập: %s%n", ngayLap));
+        content.append(String.format("Khách Hàng: %s%n", tenKhachHang));
+        content.append(String.format("Số Điện Thoại: %s%n", sdt));
+        content.append(String.format("Trạng Thái: %s%n%n", trangThai));
+        content.append("───────────────────────────────────────────────────────────\n");
+        content.append("                     CHI TIẾT VÉ                          \n");
+        content.append("───────────────────────────────────────────────────────────\n\n");
+
+        // Thêm chi tiết vé
+        for (int i = 0; i < tableModelChiTiet.getRowCount(); i++) {
+            String phim = tableModelChiTiet.getValueAt(i, 1).toString();
+            String phong = tableModelChiTiet.getValueAt(i, 2).toString();
+            String ngayChieu = tableModelChiTiet.getValueAt(i, 3).toString();
+            String gioChieu = tableModelChiTiet.getValueAt(i, 4).toString();
+            String soGhe = tableModelChiTiet.getValueAt(i, 5).toString();
+            String loaiGhe = tableModelChiTiet.getValueAt(i, 6).toString();
+            String giaVe = tableModelChiTiet.getValueAt(i, 7).toString();
+
+            content.append(String.format("Vé %d:%n", i + 1));
+            content.append(String.format("  Phim: %s%n", phim));
+            content.append(String.format("  Phòng: %s | Ghế: %s (%s)%n", phong, soGhe, loaiGhe));
+            content.append(String.format("  Ngày: %s | Giờ: %s%n", ngayChieu, gioChieu));
+            content.append(String.format("  Giá: %s VNĐ%n%n", giaVe));
+        }
+
+        content.append("═══════════════════════════════════════════════════════════\n");
+        content.append(String.format("TỔNG TIỀN: %s VNĐ%n", tongTien));
+        content.append("═══════════════════════════════════════════════════════════\n\n");
+        content.append("            Cảm ơn quý khách! Hẹn gặp lại!              \n");
+        content.append("═══════════════════════════════════════════════════════════\n");
+
+        // Hiển thị hộp thoại xác nhận in
+        JTextArea textArea = new JTextArea(content.toString());
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        textArea.setEditable(false);
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(600, 500));
+
+        int option = JOptionPane.showConfirmDialog(
+            this,
+            scrollPane,
+            "Xem Trước Hóa Đơn - Xác Nhận In",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (option == JOptionPane.OK_OPTION) {
+            // In hóa đơn
+            try {
+                boolean complete = textArea.print();
+                if (complete) {
+                    JOptionPane.showMessageDialog(this, "In hóa đơn thành công!", "Thành Công", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "In hóa đơn bị hủy!", "Thông Báo", JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (PrinterException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi in: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         }
     }
