@@ -7,7 +7,9 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.print.*;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
@@ -613,6 +615,20 @@ public class DatVeFrameModern extends JFrame {
             // Complete payment
             if (hoaDonDAO.thanhToanHoaDon(hoaDonHienTai.getMaHoaDon())) {
                 UIStyles.showSuccessMessage(this, "Thanh toán thành công!\nMã hóa đơn: " + hoaDonHienTai.getMaHoaDon());
+
+                // Ask if user wants to print invoice
+                int option = JOptionPane.showConfirmDialog(
+                    this,
+                    "Thanh toán thành công!\nBạn có muốn in hóa đơn không?",
+                    "In Hóa Đơn",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+                );
+
+                if (option == JOptionPane.YES_OPTION) {
+                    inHoaDon(hoaDonHienTai.getMaHoaDon());
+                }
+
                 resetSelection();
                 loadSeats(); // Reload to show newly occupied seats
             } else {
@@ -620,6 +636,96 @@ public class DatVeFrameModern extends JFrame {
             }
         } else {
             UIStyles.showErrorMessage(this, "Đặt vé thất bại!");
+        }
+    }
+
+    /**
+     * In hóa đơn sau khi đặt vé thành công
+     */
+    private void inHoaDon(int maHoaDon) {
+        // Get invoice details
+        HoaDon hoaDon = hoaDonDAO.timHoaDonTheoMa(maHoaDon);
+        if (hoaDon == null) {
+            UIStyles.showErrorMessage(this, "Không tìm thấy hóa đơn!");
+            return;
+        }
+
+        // Get ticket details
+        List<Ve> danhSachVe = veDAO.layVeTheoHoaDon(maHoaDon);
+        if (danhSachVe.isEmpty()) {
+            UIStyles.showErrorMessage(this, "Hóa đơn không có chi tiết!");
+            return;
+        }
+
+        // Create invoice content
+        StringBuilder content = new StringBuilder();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
+        content.append("═══════════════════════════════════════════════════════════\n");
+        content.append("                    HÓA ĐƠN BÁN VÉ                        \n");
+        content.append("              HỆ THỐNG RẠP CHIẾU PHIM                     \n");
+        content.append("═══════════════════════════════════════════════════════════\n\n");
+        content.append(String.format("Mã Hóa Đơn: %d%n", hoaDon.getMaHoaDon()));
+        content.append(String.format("Ngày Lập: %s%n", sdf.format(hoaDon.getNgayLap())));
+        content.append(String.format("Khách Hàng: %s%n", hoaDon.getKhachHang().getTenKhachHang()));
+        content.append(String.format("Số Điện Thoại: %s%n", hoaDon.getKhachHang().getSoDienThoai()));
+        content.append(String.format("Trạng Thái: %s%n%n", hoaDon.getTrangThaiThanhToan()));
+        content.append("───────────────────────────────────────────────────────────\n");
+        content.append("                     CHI TIẾT VÉ                          \n");
+        content.append("───────────────────────────────────────────────────────────\n\n");
+
+        double tongTien = 0;
+        SimpleDateFormat dateSdf = new SimpleDateFormat("dd/MM/yyyy");
+
+        for (int i = 0; i < danhSachVe.size(); i++) {
+            Ve ve = danhSachVe.get(i);
+            content.append(String.format("Vé %d:%n", i + 1));
+            content.append(String.format("  Phim: %s%n", ve.getLichChieu().getPhim().getTenPhim()));
+            content.append(String.format("  Phòng: %s | Ghế: %s (%s)%n",
+                ve.getLichChieu().getPhongChieu().getTenPhong(),
+                ve.getGhe().getSoGhe(),
+                ve.getGhe().getLoaiGhe()));
+            content.append(String.format("  Ngày: %s | Giờ: %s%n",
+                dateSdf.format(ve.getLichChieu().getNgayChieu()),
+                ve.getLichChieu().getGioChieu()));
+            content.append(String.format("  Giá: %,.0f VNĐ%n%n", ve.getGiaVe()));
+            tongTien += ve.getGiaVe();
+        }
+
+        content.append("═══════════════════════════════════════════════════════════\n");
+        content.append(String.format("TỔNG TIỀN: %,.0f VNĐ%n", tongTien));
+        content.append("═══════════════════════════════════════════════════════════\n\n");
+        content.append("            Cảm ơn quý khách! Hẹn gặp lại!              \n");
+        content.append("═══════════════════════════════════════════════════════════\n");
+
+        // Show preview and print dialog
+        JTextArea textArea = new JTextArea(content.toString());
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        textArea.setEditable(false);
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(600, 500));
+
+        int option = JOptionPane.showConfirmDialog(
+            this,
+            scrollPane,
+            "Xem Trước Hóa Đơn - Xác Nhận In",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                boolean complete = textArea.print();
+                if (complete) {
+                    UIStyles.showSuccessMessage(this, "In hóa đơn thành công!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "In hóa đơn bị hủy!", "Thông Báo", JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (PrinterException ex) {
+                UIStyles.showErrorMessage(this, "Lỗi khi in: " + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 }
