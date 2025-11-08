@@ -234,8 +234,8 @@ public class VeDAO implements IVeDAO {
         // Map LichChieu
         LichChieu lichChieu = new LichChieu();
         lichChieu.setMaLichChieu(rs.getInt("maLichChieu"));
-        lichChieu.setNgayChieu(rs.getDate("ngayChieu").toLocalDate());
-        lichChieu.setGioChieu(rs.getTime("gioChieu").toLocalTime());
+        lichChieu.setNgayChieu(rs.getDate("ngayChieu"));
+        lichChieu.setGioChieu(rs.getTime("gioChieu"));
         lichChieu.setGiaVe(rs.getDouble("giaVeLichChieu"));
 
         // Map Phim
@@ -264,7 +264,7 @@ public class VeDAO implements IVeDAO {
         // Map HoaDon
         HoaDon hoaDon = new HoaDon();
         hoaDon.setMaHoaDon(rs.getInt("maHoaDon"));
-        hoaDon.setNgayLap(rs.getTimestamp("ngayLap").toLocalDateTime());
+        hoaDon.setNgayLap(rs.getTimestamp("ngayLap"));
         hoaDon.setTongTien(rs.getDouble("tongTien"));
         hoaDon.setTrangThaiThanhToan(rs.getString("trangThaiThanhToan"));
 

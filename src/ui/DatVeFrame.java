@@ -6,6 +6,7 @@ import entity.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -195,7 +196,7 @@ public class DatVeFrame extends JFrame {
 
         hoaDonHienTai = new HoaDon();
         hoaDonHienTai.setKhachHang(kh);
-        hoaDonHienTai.setNgayLap(LocalDateTime.now());
+        hoaDonHienTai.setNgayLap(Timestamp.valueOf(LocalDateTime.now()));
         hoaDonHienTai.setTongTien(0.0);
         hoaDonHienTai.setTrangThaiThanhToan("Chua thanh toan");
 
