@@ -264,7 +264,30 @@ public class MainFrame extends JFrame {
 
     public static void main(String[] args) {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            // Try to use FlatLaf if available
+            try {
+                Class<?> flatLafClass = Class.forName("com.formdev.flatlaf.FlatLightLaf");
+                UIManager.setLookAndFeel((javax.swing.LookAndFeel) flatLafClass.getDeclaredConstructor().newInstance());
+
+                // FlatLaf customizations for modern appearance
+                UIManager.put("Button.arc", 8);
+                UIManager.put("Component.arc", 8);
+                UIManager.put("ProgressBar.arc", 8);
+                UIManager.put("TextComponent.arc", 8);
+                UIManager.put("ScrollBar.thumbArc", 999);
+                UIManager.put("ScrollBar.thumbInsets", new java.awt.Insets(2, 2, 2, 2));
+                UIManager.put("Table.showHorizontalLines", false);
+                UIManager.put("Table.showVerticalLines", false);
+                UIManager.put("Table.intercellSpacing", new java.awt.Dimension(0, 0));
+
+                System.out.println("✓ FlatLaf initialized successfully!");
+            } catch (ClassNotFoundException e) {
+                // FlatLaf not available, use system look and feel
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                System.out.println("ℹ FlatLaf not found. Using system Look & Feel.");
+                System.out.println("  To enable modern UI, add FlatLaf library:");
+                System.out.println("  com.formdev:flatlaf:3.2.5");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
