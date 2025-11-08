@@ -137,18 +137,19 @@ public class WelcomePanel extends JPanel {
 
     private JPanel createQuickActionCard(String title, String description, Icon icon,
                                          Color accentColor, Runnable action) {
-        JPanel card = new JPanel() {
-            private boolean isHovered = false;
-            private float shadowSize = 0;
+        // Mutable state for hover effects
+        final boolean[] isHovered = {false};
+        final float[] shadowSize = {4};
 
+        JPanel card = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                 // Shadow
-                if (shadowSize > 0) {
-                    for (int i = 0; i < shadowSize; i++) {
+                if (shadowSize[0] > 0) {
+                    for (int i = 0; i < shadowSize[0]; i++) {
                         int alpha = (int) (20 - (i * 2));
                         g2d.setColor(new Color(0, 0, 0, alpha));
                         g2d.fillRoundRect(i, i + 4, getWidth() - i * 2, getHeight() - i * 2,
@@ -167,19 +168,11 @@ public class WelcomePanel extends JPanel {
                                  ModernUIStyles.BORDER_RADIUS_LARGE, ModernUIStyles.BORDER_RADIUS_LARGE);
 
                 // Border on hover
-                if (isHovered) {
+                if (isHovered[0]) {
                     g2d.setColor(accentColor);
                     g2d.setStroke(new BasicStroke(2));
                     g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1,
                                      ModernUIStyles.BORDER_RADIUS_LARGE, ModernUIStyles.BORDER_RADIUS_LARGE);
-                }
-            }
-
-            public void setHovered(boolean hovered) {
-                if (this.isHovered != hovered) {
-                    this.isHovered = hovered;
-                    shadowSize = hovered ? 8 : 4;
-                    repaint();
                 }
             }
         };
@@ -221,17 +214,19 @@ public class WelcomePanel extends JPanel {
 
         // Hover effects
         card.addMouseListener(new MouseAdapter() {
-            private Timer hoverTimer;
-
             @Override
             public void mouseEntered(MouseEvent e) {
-                card.setHovered(true);
+                isHovered[0] = true;
+                shadowSize[0] = 8;
+                card.repaint();
                 AnimationUtils.scaleUp(card, 1.02f, 200);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                card.setHovered(false);
+                isHovered[0] = false;
+                shadowSize[0] = 4;
+                card.repaint();
                 AnimationUtils.scaleDown(card, 200);
             }
 
