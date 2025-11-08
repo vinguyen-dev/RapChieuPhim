@@ -15,7 +15,8 @@ public class DashboardFrame extends JFrame {
     private ThongKeDAO thongKeDAO;
 
     private JLabel lblTongDoanhThu, lblTongVe, lblTongKhachHang, lblTongPhim;
-    private BarChart chartDoanhThuPhim, chartSoVePhim, chartDoanhThuTheLoai;
+    private BarChart chartDoanhThuPhim, chartSoVePhim, chartDoanhThuTheLoai, chartDoanhThuLoaiGhe;
+    private JPanel panelTopKhachHang;
 
     public DashboardFrame() {
         thongKeDAO = ThongKeDAO.getInstance();
@@ -167,34 +168,60 @@ public class DashboardFrame extends JFrame {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
 
-        // Top row - Revenue by movie
+        // Row 1 - Revenue by movie (full width)
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         chartDoanhThuPhim = new BarChart("Top 10 Phim Theo Doanh Thu", "Phim", "Doanh thu (VNĐ)");
         chartDoanhThuPhim.setBarColor(UIStyles.SUCCESS_COLOR);
-        JPanel chartPanel1 = wrapInPanel(chartDoanhThuPhim, "Doanh Thu Theo Phim");
-        gbc.weighty = 1.2;
+        JPanel chartPanel1 = wrapInPanel(chartDoanhThuPhim, "📊 Doanh Thu Theo Phim");
+        gbc.weighty = 1.0;
         panel.add(chartPanel1, gbc);
 
-        // Bottom left - Tickets by movie
+        // Row 2 Left - Tickets by movie
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
-        gbc.weighty = 1.0;
+        gbc.weighty = 0.8;
         chartSoVePhim = new BarChart("Top 10 Phim Phổ Biến", "Phim", "Số vé");
         chartSoVePhim.setBarColor(UIStyles.PRIMARY_COLOR);
-        JPanel chartPanel2 = wrapInPanel(chartSoVePhim, "Số Vé Bán Ra");
+        JPanel chartPanel2 = wrapInPanel(chartSoVePhim, "🎟️ Số Vé Bán Ra");
         panel.add(chartPanel2, gbc);
 
-        // Bottom right - Revenue by genre
+        // Row 2 Right - Revenue by genre
         gbc.gridx = 1;
         gbc.gridy = 1;
         chartDoanhThuTheLoai = new BarChart("Doanh Thu Theo Thể Loại", "Thể loại", "Doanh thu (VNĐ)");
         chartDoanhThuTheLoai.setBarColor(UIStyles.ACCENT_COLOR);
-        JPanel chartPanel3 = wrapInPanel(chartDoanhThuTheLoai, "Thể Loại Phổ Biến");
+        JPanel chartPanel3 = wrapInPanel(chartDoanhThuTheLoai, "🎬 Thể Loại Phổ Biến");
         panel.add(chartPanel3, gbc);
 
+        // Row 3 Left - Revenue by seat type
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        gbc.weighty = 0.8;
+        chartDoanhThuLoaiGhe = new BarChart("Doanh Thu Theo Loại Ghế", "Loại ghế", "Doanh thu (VNĐ)");
+        chartDoanhThuLoaiGhe.setBarColor(new Color(255, 152, 0)); // Orange color
+        JPanel chartPanel4 = wrapInPanel(chartDoanhThuLoaiGhe, "💺 Doanh Thu Theo Loại Ghế");
+        panel.add(chartPanel4, gbc);
+
+        // Row 3 Right - Top customers
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        panelTopKhachHang = createTopCustomersPanel();
+        JPanel chartPanel5 = wrapInPanel(panelTopKhachHang, "🏆 Top Khách Hàng");
+        panel.add(chartPanel5, gbc);
+
+        return panel;
+    }
+
+    /**
+     * Create top customers panel
+     */
+    private JPanel createTopCustomersPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
         return panel;
     }
 
@@ -232,10 +259,117 @@ public class DashboardFrame extends JFrame {
         Map<String, Double> doanhThuPhim = thongKeDAO.getDoanhThuTheoPhim();
         Map<String, Double> soVePhim = thongKeDAO.getSoVeTheoPhim();
         Map<String, Double> doanhThuTheLoai = thongKeDAO.getDoanhThuTheoTheLoai();
+        Map<String, Double> doanhThuLoaiGhe = thongKeDAO.getDoanhThuTheoLoaiGhe();
+        Map<String, Double> topKhachHang = thongKeDAO.getTopKhachHang(10);
 
         chartDoanhThuPhim.setData(doanhThuPhim);
         chartSoVePhim.setData(soVePhim);
         chartDoanhThuTheLoai.setData(doanhThuTheLoai);
+        chartDoanhThuLoaiGhe.setData(doanhThuLoaiGhe);
+
+        // Update top customers panel
+        updateTopCustomersPanel(topKhachHang);
+    }
+
+    /**
+     * Update top customers panel with data
+     */
+    private void updateTopCustomersPanel(Map<String, Double> topKhachHang) {
+        panelTopKhachHang.removeAll();
+
+        JPanel listPanel = new JPanel();
+        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.setOpaque(false);
+        listPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        int rank = 1;
+        for (Map.Entry<String, Double> entry : topKhachHang.entrySet()) {
+            JPanel rowPanel = createCustomerRow(rank, entry.getKey(), entry.getValue());
+            listPanel.add(rowPanel);
+            listPanel.add(Box.createVerticalStrut(8));
+            rank++;
+        }
+
+        JScrollPane scrollPane = new JScrollPane(listPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+
+        panelTopKhachHang.add(scrollPane, BorderLayout.CENTER);
+        panelTopKhachHang.revalidate();
+        panelTopKhachHang.repaint();
+    }
+
+    /**
+     * Create a customer row for top customers list
+     */
+    private JPanel createCustomerRow(int rank, String customerName, double revenue) {
+        JPanel row = new JPanel(new BorderLayout(10, 0));
+        row.setOpaque(true);
+        row.setBackground(UIStyles.BG_SECONDARY);
+        row.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+
+        // Rank label with medal icon
+        JLabel lblRank = new JLabel(getRankIcon(rank) + " " + rank);
+        lblRank.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblRank.setForeground(getRankColor(rank));
+
+        // Customer name
+        JLabel lblName = new JLabel(customerName);
+        lblName.setFont(UIStyles.FONT_NORMAL);
+        lblName.setForeground(UIStyles.TEXT_PRIMARY);
+
+        // Revenue
+        JLabel lblRevenue = new JLabel(Constants.formatCurrency(revenue));
+        lblRevenue.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblRevenue.setForeground(UIStyles.SUCCESS_COLOR);
+
+        row.add(lblRank, BorderLayout.WEST);
+        row.add(lblName, BorderLayout.CENTER);
+        row.add(lblRevenue, BorderLayout.EAST);
+
+        // Add hover effect
+        row.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                row.setBackground(new Color(245, 245, 245));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                row.setBackground(UIStyles.BG_SECONDARY);
+            }
+        });
+
+        return row;
+    }
+
+    /**
+     * Get medal icon for top 3 ranks
+     */
+    private String getRankIcon(int rank) {
+        switch (rank) {
+            case 1: return "🥇";
+            case 2: return "🥈";
+            case 3: return "🥉";
+            default: return "•";
+        }
+    }
+
+    /**
+     * Get color based on rank
+     */
+    private Color getRankColor(int rank) {
+        switch (rank) {
+            case 1: return new Color(255, 193, 7); // Gold
+            case 2: return new Color(158, 158, 158); // Silver
+            case 3: return new Color(205, 127, 50); // Bronze
+            default: return UIStyles.TEXT_SECONDARY;
+        }
     }
 
     public static void main(String[] args) {

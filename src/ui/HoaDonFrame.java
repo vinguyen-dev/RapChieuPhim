@@ -4,6 +4,7 @@ import dao.HoaDonDAO;
 import dao.VeDAO;
 import entity.HoaDon;
 import entity.Ve;
+import util.InvoicePDFExporter;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -18,7 +19,7 @@ public class HoaDonFrame extends JFrame {
     private VeDAO veDAO;
 
     private JComboBox<String> cboTrangThai;
-    private JButton btnLoc, btnThanhToan, btnHuy, btnLamMoi, btnInHoaDon;
+    private JButton btnLoc, btnThanhToan, btnHuy, btnLamMoi, btnInHoaDon, btnLuuPDF;
     private JLabel lblTongTien;
 
     public HoaDonFrame() {
@@ -106,14 +107,17 @@ public class HoaDonFrame extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         btnThanhToan = new JButton("Thanh Toán");
         btnHuy = new JButton("Hủy Hóa Đơn");
-        btnInHoaDon = new JButton("In Hóa Đơn");
+        btnLuuPDF = new JButton("💾 Lưu PDF");
+        btnInHoaDon = new JButton("🖨️ In Hóa Đơn");
 
         btnThanhToan.addActionListener(e -> thanhToanHoaDon());
         btnHuy.addActionListener(e -> huyHoaDon());
+        btnLuuPDF.addActionListener(e -> luuPDF());
         btnInHoaDon.addActionListener(e -> inHoaDon());
 
         buttonPanel.add(btnThanhToan);
         buttonPanel.add(btnHuy);
+        buttonPanel.add(btnLuuPDF);
         buttonPanel.add(btnInHoaDon);
 
         bottomControlPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -261,6 +265,81 @@ public class HoaDonFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Hủy hóa đơn thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    /**
+     * Lưu hóa đơn ra file PDF/Text
+     */
+    private void luuPDF() {
+        int selectedRow = tableHoaDon.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn cần lưu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (tableModelChiTiet.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Hóa đơn không có chi tiết!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Lấy thông tin hóa đơn
+        int maHoaDon = Integer.parseInt(tableModelHoaDon.getValueAt(selectedRow, 0).toString());
+        String tenKhachHang = tableModelHoaDon.getValueAt(selectedRow, 1).toString();
+        String sdt = tableModelHoaDon.getValueAt(selectedRow, 2).toString();
+        String ngayLap = tableModelHoaDon.getValueAt(selectedRow, 3).toString();
+        String tongTien = tableModelHoaDon.getValueAt(selectedRow, 4).toString();
+        String trangThai = tableModelHoaDon.getValueAt(selectedRow, 5).toString();
+
+        // Tạo nội dung hóa đơn
+        String content = createInvoiceContent(maHoaDon, tenKhachHang, sdt, ngayLap, tongTien, trangThai);
+
+        // Xuất ra file và có option in ra máy in PDF
+        InvoicePDFExporter.exportAndPrintToPDF(content, "HoaDon_" + maHoaDon, this);
+    }
+
+    /**
+     * Tạo nội dung hóa đơn
+     */
+    private String createInvoiceContent(int maHoaDon, String tenKhachHang, String sdt,
+                                        String ngayLap, String tongTien, String trangThai) {
+        StringBuilder content = new StringBuilder();
+        content.append("═══════════════════════════════════════════════════════════\n");
+        content.append("                    HÓA ĐƠN BÁN VÉ                        \n");
+        content.append("              HỆ THỐNG RẠP CHIẾU PHIM                     \n");
+        content.append("═══════════════════════════════════════════════════════════\n\n");
+        content.append(String.format("Mã Hóa Đơn: %d%n", maHoaDon));
+        content.append(String.format("Ngày Lập: %s%n", ngayLap));
+        content.append(String.format("Khách Hàng: %s%n", tenKhachHang));
+        content.append(String.format("Số Điện Thoại: %s%n", sdt));
+        content.append(String.format("Trạng Thái: %s%n%n", trangThai));
+        content.append("───────────────────────────────────────────────────────────\n");
+        content.append("                     CHI TIẾT VÉ                          \n");
+        content.append("───────────────────────────────────────────────────────────\n\n");
+
+        // Thêm chi tiết vé
+        for (int i = 0; i < tableModelChiTiet.getRowCount(); i++) {
+            String phim = tableModelChiTiet.getValueAt(i, 1).toString();
+            String phong = tableModelChiTiet.getValueAt(i, 2).toString();
+            String ngayChieu = tableModelChiTiet.getValueAt(i, 3).toString();
+            String gioChieu = tableModelChiTiet.getValueAt(i, 4).toString();
+            String soGhe = tableModelChiTiet.getValueAt(i, 5).toString();
+            String loaiGhe = tableModelChiTiet.getValueAt(i, 6).toString();
+            String giaVe = tableModelChiTiet.getValueAt(i, 7).toString();
+
+            content.append(String.format("Vé %d:%n", i + 1));
+            content.append(String.format("  Phim: %s%n", phim));
+            content.append(String.format("  Phòng: %s | Ghế: %s (%s)%n", phong, soGhe, loaiGhe));
+            content.append(String.format("  Ngày: %s | Giờ: %s%n", ngayChieu, gioChieu));
+            content.append(String.format("  Giá: %s VNĐ%n%n", giaVe));
+        }
+
+        content.append("═══════════════════════════════════════════════════════════\n");
+        content.append(String.format("TỔNG TIỀN: %s VNĐ%n", tongTien));
+        content.append("═══════════════════════════════════════════════════════════\n\n");
+        content.append("            Cảm ơn quý khách! Hẹn gặp lại!              \n");
+        content.append("═══════════════════════════════════════════════════════════\n");
+
+        return content.toString();
     }
 
     /**
