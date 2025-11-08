@@ -5,7 +5,6 @@ import entity.KhachHang;
 import util.JDBCUtil;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class HoaDonDAO implements IHoaDonDAO {
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, hoaDon.getKhachHang().getMaKhachHang());
-            stmt.setTimestamp(2, Timestamp.valueOf(hoaDon.getNgayLap()));
+            stmt.setTimestamp(2, hoaDon.getNgayLap());
             stmt.setDouble(3, hoaDon.getTongTien());
             stmt.setString(4, hoaDon.getTrangThaiThanhToan());
 
@@ -53,7 +52,7 @@ public class HoaDonDAO implements IHoaDonDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, hoaDon.getKhachHang().getMaKhachHang());
-            stmt.setTimestamp(2, Timestamp.valueOf(hoaDon.getNgayLap()));
+            stmt.setTimestamp(2, hoaDon.getNgayLap());
             stmt.setDouble(3, hoaDon.getTongTien());
             stmt.setString(4, hoaDon.getTrangThaiThanhToan());
             stmt.setInt(5, hoaDon.getMaHoaDon());
@@ -146,7 +145,7 @@ public class HoaDonDAO implements IHoaDonDAO {
     }
 
     @Override
-    public List<HoaDon> layHoaDonTheoNgay(LocalDateTime tuNgay, LocalDateTime denNgay) {
+    public List<HoaDon> layHoaDonTheoNgay(Timestamp tuNgay, Timestamp denNgay) {
         List<HoaDon> danhSachHoaDon = new ArrayList<>();
         String sql = "SELECT hd.*, kh.tenKhachHang, kh.soDienThoai, kh.email " +
                      "FROM HoaDon hd " +
@@ -157,8 +156,8 @@ public class HoaDonDAO implements IHoaDonDAO {
         try (Connection conn = JDBCUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setTimestamp(1, Timestamp.valueOf(tuNgay));
-            stmt.setTimestamp(2, Timestamp.valueOf(denNgay));
+            stmt.setTimestamp(1, tuNgay);
+            stmt.setTimestamp(2, denNgay);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -244,7 +243,7 @@ public class HoaDonDAO implements IHoaDonDAO {
     private HoaDon mapHoaDon(ResultSet rs) throws SQLException {
         HoaDon hoaDon = new HoaDon();
         hoaDon.setMaHoaDon(rs.getInt("maHoaDon"));
-        hoaDon.setNgayLap(rs.getTimestamp("ngayLap").toLocalDateTime());
+        hoaDon.setNgayLap(rs.getTimestamp("ngayLap"));
         hoaDon.setTongTien(rs.getDouble("tongTien"));
         hoaDon.setTrangThaiThanhToan(rs.getString("trangThaiThanhToan"));
 

@@ -10,9 +10,10 @@ import entity.PhongChieu;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.sql.Date;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class LichChieuFrame extends JFrame {
@@ -216,8 +217,8 @@ public class LichChieuFrame extends JFrame {
 
             int maPhim = extractId(cboPhim.getSelectedItem().toString());
             int maPhong = extractId(cboPhongChieu.getSelectedItem().toString());
-            LocalDate ngayChieu = LocalDate.parse(txtNgayChieu.getText().trim());
-            LocalTime gioChieu = LocalTime.parse(txtGioChieu.getText().trim());
+            LocalDate localNgayChieu = LocalDate.parse(txtNgayChieu.getText().trim());
+            LocalTime localGioChieu = LocalTime.parse(txtGioChieu.getText().trim());
             double giaVe = Double.parseDouble(txtGiaVe.getText().trim());
 
             Phim phim = phimDAO.timPhimTheoMa(maPhim);
@@ -226,8 +227,8 @@ public class LichChieuFrame extends JFrame {
             LichChieu lc = new LichChieu();
             lc.setPhim(phim);
             lc.setPhongChieu(phongChieu);
-            lc.setNgayChieu(ngayChieu);
-            lc.setGioChieu(gioChieu);
+            lc.setNgayChieu(Date.valueOf(localNgayChieu));
+            lc.setGioChieu(Time.valueOf(localGioChieu));
             lc.setGiaVe(giaVe);
 
             if (lichChieuDAO.themLichChieu(lc)) {
@@ -253,8 +254,8 @@ public class LichChieuFrame extends JFrame {
             int maLichChieu = Integer.parseInt(maLichChieuStr);
             int maPhim = extractId(cboPhim.getSelectedItem().toString());
             int maPhong = extractId(cboPhongChieu.getSelectedItem().toString());
-            LocalDate ngayChieu = LocalDate.parse(txtNgayChieu.getText().trim());
-            LocalTime gioChieu = LocalTime.parse(txtGioChieu.getText().trim());
+            LocalDate localNgayChieu = LocalDate.parse(txtNgayChieu.getText().trim());
+            LocalTime localGioChieu = LocalTime.parse(txtGioChieu.getText().trim());
             double giaVe = Double.parseDouble(txtGiaVe.getText().trim());
 
             Phim phim = phimDAO.timPhimTheoMa(maPhim);
@@ -264,8 +265,8 @@ public class LichChieuFrame extends JFrame {
             lc.setMaLichChieu(maLichChieu);
             lc.setPhim(phim);
             lc.setPhongChieu(phongChieu);
-            lc.setNgayChieu(ngayChieu);
-            lc.setGioChieu(gioChieu);
+            lc.setNgayChieu(Date.valueOf(localNgayChieu));
+            lc.setGioChieu(Time.valueOf(localGioChieu));
             lc.setGiaVe(giaVe);
 
             if (lichChieuDAO.capNhatLichChieu(lc)) {
