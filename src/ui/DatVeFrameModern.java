@@ -351,6 +351,10 @@ public class DatVeFrameModern extends JFrame {
         if (lichChieuHienTai == null) return;
 
         int maPhong = lichChieuHienTai.getPhongChieu().getMaPhong();
+
+        // Kiểm tra và tạo ghế tự động nếu phòng chưa có ghế
+        gheDAO.kiemTraVaTaoGhe(maPhong);
+
         List<Ghe> danhSachGhe = gheDAO.layDanhSachGheTheoPhong(maPhong);
 
         // Group seats by row
