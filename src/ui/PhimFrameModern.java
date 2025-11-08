@@ -118,27 +118,29 @@ public class PhimFrameModern extends JFrame {
 
     private JPanel createMovieGridPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
-        UIStyles.styleCard(panel);
+        panel.setBackground(new Color(20, 20, 20)); // Dark background like Netflix
         panel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createEmptyBorder(15, 15, 15, 10),
             BorderFactory.createTitledBorder(
-                BorderFactory.createMatteBorder(0, 0, 2, 0, UIStyles.PRIMARY_COLOR),
+                BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(229, 9, 20)), // Netflix red
                 "🎬 Danh Sách Phim",
                 TitledBorder.LEFT,
                 TitledBorder.TOP,
                 UIStyles.FONT_HEADER,
-                UIStyles.PRIMARY_DARK
+                Color.WHITE
             )
         ));
 
-        // Movies grid with FlowLayout wrapped in ScrollPane
-        moviesGridPanel = new JPanel(new GridLayout(0, 4, 15, 15));
-        moviesGridPanel.setBackground(UIStyles.BG_SECONDARY);
-        moviesGridPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // Movies grid with Netflix-style spacing
+        moviesGridPanel = new JPanel(new GridLayout(0, 4, 20, 20)); // 4 columns, 20px gaps
+        moviesGridPanel.setBackground(new Color(20, 20, 20)); // Dark background
+        moviesGridPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         gridScrollPane = new JScrollPane(moviesGridPanel);
         gridScrollPane.setBorder(null);
         gridScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        gridScrollPane.setBackground(new Color(20, 20, 20));
+        gridScrollPane.getViewport().setBackground(new Color(20, 20, 20));
 
         panel.add(gridScrollPane, BorderLayout.CENTER);
 
