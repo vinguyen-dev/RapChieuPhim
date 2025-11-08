@@ -6,8 +6,6 @@ import entity.PhongChieu;
 import util.JDBCUtil;
 
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +27,8 @@ public class LichChieuDAO implements ILichChieuDAO {
 
             stmt.setInt(1, lichChieu.getPhim().getMaPhim());
             stmt.setInt(2, lichChieu.getPhongChieu().getMaPhong());
-            stmt.setDate(3, Date.valueOf(lichChieu.getNgayChieu()));
-            stmt.setTime(4, Time.valueOf(lichChieu.getGioChieu()));
+            stmt.setDate(3, lichChieu.getNgayChieu());
+            stmt.setTime(4, lichChieu.getGioChieu());
             stmt.setDouble(5, lichChieu.getGiaVe());
 
             int rowsAffected = stmt.executeUpdate();
@@ -56,8 +54,8 @@ public class LichChieuDAO implements ILichChieuDAO {
 
             stmt.setInt(1, lichChieu.getPhim().getMaPhim());
             stmt.setInt(2, lichChieu.getPhongChieu().getMaPhong());
-            stmt.setDate(3, Date.valueOf(lichChieu.getNgayChieu()));
-            stmt.setTime(4, Time.valueOf(lichChieu.getGioChieu()));
+            stmt.setDate(3, lichChieu.getNgayChieu());
+            stmt.setTime(4, lichChieu.getGioChieu());
             stmt.setDouble(5, lichChieu.getGiaVe());
             stmt.setInt(6, lichChieu.getMaLichChieu());
 
@@ -181,7 +179,7 @@ public class LichChieuDAO implements ILichChieuDAO {
     }
 
     @Override
-    public List<LichChieu> layLichChieuTheoNgay(LocalDate ngayChieu) {
+    public List<LichChieu> layLichChieuTheoNgay(Date ngayChieu) {
         List<LichChieu> danhSachLichChieu = new ArrayList<>();
         String sql = "SELECT lc.*, p.tenPhim, p.theLoai, p.thoiLuong, p.moTa, p.hinhAnh, " +
                      "pc.tenPhong, pc.soGhe, pc.loaiPhong " +
@@ -194,7 +192,7 @@ public class LichChieuDAO implements ILichChieuDAO {
         try (Connection conn = JDBCUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setDate(1, Date.valueOf(ngayChieu));
+            stmt.setDate(1, ngayChieu);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -207,7 +205,7 @@ public class LichChieuDAO implements ILichChieuDAO {
     }
 
     @Override
-    public List<LichChieu> layLichChieuTheoPhongVaNgay(int maPhong, LocalDate ngayChieu) {
+    public List<LichChieu> layLichChieuTheoPhongVaNgay(int maPhong, Date ngayChieu) {
         List<LichChieu> danhSachLichChieu = new ArrayList<>();
         String sql = "SELECT lc.*, p.tenPhim, p.theLoai, p.thoiLuong, p.moTa, p.hinhAnh, " +
                      "pc.tenPhong, pc.soGhe, pc.loaiPhong " +
@@ -221,7 +219,7 @@ public class LichChieuDAO implements ILichChieuDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, maPhong);
-            stmt.setDate(2, Date.valueOf(ngayChieu));
+            stmt.setDate(2, ngayChieu);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -234,14 +232,14 @@ public class LichChieuDAO implements ILichChieuDAO {
     }
 
     @Override
-    public boolean kiemTraLichChieuTrung(int maPhong, LocalDate ngayChieu, LocalTime gioChieu) {
+    public boolean kiemTraLichChieuTrung(int maPhong, Date ngayChieu, Time gioChieu) {
         String sql = "SELECT COUNT(*) FROM LichChieu WHERE maPhong = ? AND ngayChieu = ? AND gioChieu = ?";
         try (Connection conn = JDBCUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, maPhong);
-            stmt.setDate(2, Date.valueOf(ngayChieu));
-            stmt.setTime(3, Time.valueOf(gioChieu));
+            stmt.setDate(2, ngayChieu);
+            stmt.setTime(3, gioChieu);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -274,8 +272,8 @@ public class LichChieuDAO implements ILichChieuDAO {
     private LichChieu mapLichChieu(ResultSet rs) throws SQLException {
         LichChieu lichChieu = new LichChieu();
         lichChieu.setMaLichChieu(rs.getInt("maLichChieu"));
-        lichChieu.setNgayChieu(rs.getDate("ngayChieu").toLocalDate());
-        lichChieu.setGioChieu(rs.getTime("gioChieu").toLocalTime());
+        lichChieu.setNgayChieu(rs.getDate("ngayChieu"));
+        lichChieu.setGioChieu(rs.getTime("gioChieu"));
         lichChieu.setGiaVe(rs.getDouble("giaVe"));
 
         // Map Phim

@@ -1,7 +1,7 @@
 package dao;
 
 import entity.HoaDon;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.List;
 
 public interface IHoaDonDAO {
@@ -24,7 +24,7 @@ public interface IHoaDonDAO {
     List<HoaDon> layHoaDonTheoKhachHang(int maKhachHang);
 
     // Lấy hóa đơn theo ngày
-    List<HoaDon> layHoaDonTheoNgay(LocalDateTime tuNgay, LocalDateTime denNgay);
+    List<HoaDon> layHoaDonTheoNgay(Timestamp tuNgay, Timestamp denNgay);
 
     // Lấy hóa đơn theo trạng thái
     List<HoaDon> layHoaDonTheoTrangThai(String trangThai);
