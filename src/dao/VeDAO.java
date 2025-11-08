@@ -117,7 +117,20 @@ public class VeDAO implements IVeDAO {
     @Override
     public List<Ve> layVeTheoHoaDon(int maHoaDon) {
         List<Ve> danhSachVe = new ArrayList<>();
-        String sql = "SELECT * FROM v_ChiTietVe WHERE maHoaDon = ?";
+        String sql = "SELECT v.*, lc.ngayChieu, lc.gioChieu, lc.giaVe AS giaVeLichChieu, " +
+                     "p.maPhim, p.tenPhim, p.theLoai, p.thoiLuong, " +
+                     "pc.maPhong, pc.tenPhong, " +
+                     "g.soGhe, g.hang, g.loaiGhe, " +
+                     "hd.ngayLap, hd.tongTien, hd.trangThaiThanhToan, " +
+                     "kh.maKhachHang, kh.tenKhachHang, kh.soDienThoai " +
+                     "FROM Ve v " +
+                     "INNER JOIN LichChieu lc ON v.maLichChieu = lc.maLichChieu " +
+                     "INNER JOIN Phim p ON lc.maPhim = p.maPhim " +
+                     "INNER JOIN PhongChieu pc ON lc.maPhong = pc.maPhong " +
+                     "INNER JOIN Ghe g ON v.maGhe = g.maGhe " +
+                     "INNER JOIN HoaDon hd ON v.maHoaDon = hd.maHoaDon " +
+                     "INNER JOIN KhachHang kh ON hd.maKhachHang = kh.maKhachHang " +
+                     "WHERE v.maHoaDon = ?";
 
         try (Connection conn = JDBCUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -126,7 +139,7 @@ public class VeDAO implements IVeDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                danhSachVe.add(mapVe(rs));
+                danhSachVe.add(mapVeFromJoin(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -137,7 +150,20 @@ public class VeDAO implements IVeDAO {
     @Override
     public List<Ve> layVeTheoLichChieu(int maLichChieu) {
         List<Ve> danhSachVe = new ArrayList<>();
-        String sql = "SELECT * FROM v_ChiTietVe WHERE maLichChieu = ?";
+        String sql = "SELECT v.*, lc.ngayChieu, lc.gioChieu, lc.giaVe AS giaVeLichChieu, " +
+                     "p.maPhim, p.tenPhim, p.theLoai, p.thoiLuong, " +
+                     "pc.maPhong, pc.tenPhong, " +
+                     "g.soGhe, g.hang, g.loaiGhe, " +
+                     "hd.ngayLap, hd.tongTien, hd.trangThaiThanhToan, " +
+                     "kh.maKhachHang, kh.tenKhachHang, kh.soDienThoai " +
+                     "FROM Ve v " +
+                     "INNER JOIN LichChieu lc ON v.maLichChieu = lc.maLichChieu " +
+                     "INNER JOIN Phim p ON lc.maPhim = p.maPhim " +
+                     "INNER JOIN PhongChieu pc ON lc.maPhong = pc.maPhong " +
+                     "INNER JOIN Ghe g ON v.maGhe = g.maGhe " +
+                     "INNER JOIN HoaDon hd ON v.maHoaDon = hd.maHoaDon " +
+                     "INNER JOIN KhachHang kh ON hd.maKhachHang = kh.maKhachHang " +
+                     "WHERE v.maLichChieu = ?";
 
         try (Connection conn = JDBCUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -146,7 +172,7 @@ public class VeDAO implements IVeDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                danhSachVe.add(mapVe(rs));
+                danhSachVe.add(mapVeFromJoin(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -175,16 +201,17 @@ public class VeDAO implements IVeDAO {
 
     @Override
     public boolean datVe(int maLichChieu, int maGhe, int maHoaDon, double giaVe) {
-        String sql = "{CALL sp_DatVe(?, ?, ?, ?)}";
+        // Use direct INSERT instead of sp_DatVe to allow multiple tickets per invoice
+        String sql = "INSERT INTO Ve (maLichChieu, maGhe, maHoaDon, giaVe, trangThai) VALUES (?, ?, ?, ?, N'Da dat')";
         try (Connection conn = JDBCUtil.getConnection();
-             CallableStatement stmt = conn.prepareCall(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, maLichChieu);
             stmt.setInt(2, maGhe);
             stmt.setInt(3, maHoaDon);
             stmt.setDouble(4, giaVe);
-            stmt.execute();
-            return true;
+
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -208,7 +235,20 @@ public class VeDAO implements IVeDAO {
     @Override
     public List<Ve> layVeTheoTrangThai(String trangThai) {
         List<Ve> danhSachVe = new ArrayList<>();
-        String sql = "SELECT * FROM v_ChiTietVe WHERE trangThaiVe = ?";
+        String sql = "SELECT v.*, lc.ngayChieu, lc.gioChieu, lc.giaVe AS giaVeLichChieu, " +
+                     "p.maPhim, p.tenPhim, p.theLoai, p.thoiLuong, " +
+                     "pc.maPhong, pc.tenPhong, " +
+                     "g.soGhe, g.hang, g.loaiGhe, " +
+                     "hd.ngayLap, hd.tongTien, hd.trangThaiThanhToan, " +
+                     "kh.maKhachHang, kh.tenKhachHang, kh.soDienThoai " +
+                     "FROM Ve v " +
+                     "INNER JOIN LichChieu lc ON v.maLichChieu = lc.maLichChieu " +
+                     "INNER JOIN Phim p ON lc.maPhim = p.maPhim " +
+                     "INNER JOIN PhongChieu pc ON lc.maPhong = pc.maPhong " +
+                     "INNER JOIN Ghe g ON v.maGhe = g.maGhe " +
+                     "INNER JOIN HoaDon hd ON v.maHoaDon = hd.maHoaDon " +
+                     "INNER JOIN KhachHang kh ON hd.maKhachHang = kh.maKhachHang " +
+                     "WHERE v.trangThai = ?";
 
         try (Connection conn = JDBCUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -217,7 +257,7 @@ public class VeDAO implements IVeDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                danhSachVe.add(mapVe(rs));
+                danhSachVe.add(mapVeFromJoin(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -229,7 +269,46 @@ public class VeDAO implements IVeDAO {
         Ve ve = new Ve();
         ve.setMaVe(rs.getInt("maVe"));
         ve.setGiaVe(rs.getDouble("giaVe"));
-        ve.setTrangThai(rs.getString("trangThaiVe"));
+        ve.setTrangThai(rs.getString("trangThaiThanhToan"));
+
+        // Map from view - limited columns available
+        LichChieu lichChieu = new LichChieu();
+        lichChieu.setNgayChieu(rs.getDate("ngayChieu"));
+        lichChieu.setGioChieu(rs.getTime("gioChieu"));
+
+        Phim phim = new Phim();
+        phim.setTenPhim(rs.getString("tenPhim"));
+
+        PhongChieu phongChieu = new PhongChieu();
+        phongChieu.setTenPhong(rs.getString("tenPhong"));
+
+        lichChieu.setPhim(phim);
+        lichChieu.setPhongChieu(phongChieu);
+
+        Ghe ghe = new Ghe();
+        ghe.setSoGhe(rs.getString("soGhe"));
+        ghe.setHang(rs.getString("hang"));
+        ghe.setLoaiGhe(rs.getString("loaiGhe"));
+
+        HoaDon hoaDon = new HoaDon();
+        hoaDon.setTrangThaiThanhToan(rs.getString("trangThaiThanhToan"));
+
+        KhachHang khachHang = new KhachHang();
+        khachHang.setTenKhachHang(rs.getString("tenKhachHang"));
+        hoaDon.setKhachHang(khachHang);
+
+        ve.setLichChieu(lichChieu);
+        ve.setGhe(ghe);
+        ve.setHoaDon(hoaDon);
+
+        return ve;
+    }
+
+    private Ve mapVeFromJoin(ResultSet rs) throws SQLException {
+        Ve ve = new Ve();
+        ve.setMaVe(rs.getInt("maVe"));
+        ve.setGiaVe(rs.getDouble("giaVe"));
+        ve.setTrangThai(rs.getString("trangThai"));
 
         // Map LichChieu
         LichChieu lichChieu = new LichChieu();
