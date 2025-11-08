@@ -218,7 +218,7 @@ public class MainFrame extends JFrame {
     }
 
     private void openPhimFrame() {
-        PhimFrame frame = new PhimFrame();
+        PhimFrameModern frame = new PhimFrameModern();
         frame.setVisible(true);
     }
 
