@@ -224,28 +224,45 @@ public class LichChieuFrameModern extends JFrame {
             panel.add(txtNgayChieuFallback, gbc);
         }
 
-        // Row 3
+        // Quick date buttons
+        JPanel quickDatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        quickDatePanel.setOpaque(false);
+
+        JButton btnToday = createQuickDateButton("Hôm nay", 0);
+        JButton btnTomorrow = createQuickDateButton("Ngày mai", 1);
+        JButton btnNextWeek = createQuickDateButton("Tuần sau", 7);
+
+        quickDatePanel.add(btnToday);
+        quickDatePanel.add(btnTomorrow);
+        quickDatePanel.add(btnNextWeek);
+
+        gbc.gridx = 3; gbc.gridy = 2; gbc.weightx = 1.0;
+        gbc.gridwidth = 1;
+        panel.add(quickDatePanel, gbc);
+
+        // Row 3 (now row 4 due to quick date buttons)
         JLabel lblGio = new JLabel("Giờ Chiếu:");
         lblGio.setFont(UIStyles.FONT_NORMAL);
-        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
         panel.add(lblGio, gbc);
 
         cboGioChieu = new JComboBox<>(Constants.GIO_CHIEU);
         UIStyles.styleComboBox(cboGioChieu);
-        gbc.gridx = 1; gbc.gridy = 2; gbc.weightx = 1.0;
+        gbc.gridx = 1; gbc.gridy = 3; gbc.weightx = 1.0;
         panel.add(cboGioChieu, gbc);
 
         JLabel lblGia = new JLabel("Giá Vé:");
         lblGia.setFont(UIStyles.FONT_NORMAL);
-        gbc.gridx = 2; gbc.gridy = 2; gbc.weightx = 0;
+        gbc.gridx = 2; gbc.gridy = 3; gbc.weightx = 0;
         panel.add(lblGia, gbc);
 
         txtGiaVe = new JTextField();
         UIStyles.styleTextField(txtGiaVe);
-        gbc.gridx = 3; gbc.gridy = 2; gbc.weightx = 1.0;
+        txtGiaVe.setText("80000"); // Default price
+        gbc.gridx = 3; gbc.gridy = 3; gbc.weightx = 1.0;
         panel.add(txtGiaVe, gbc);
 
-        // Row 4 - Buttons
+        // Row 5 - Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         buttonPanel.setOpaque(false);
 
@@ -376,9 +393,16 @@ public class LichChieuFrameModern extends JFrame {
                 return;
             }
 
+            String giaVeStr = txtGiaVe.getText().trim();
+            if (giaVeStr.isEmpty()) {
+                UIStyles.showErrorMessage(this, "Vui lòng nhập giá vé!");
+                AnimationUtils.shake(txtGiaVe);
+                return;
+            }
+
             Date ngayChieu = new Date(utilDate.getTime());
             Time gioChieu = Time.valueOf(cboGioChieu.getSelectedItem().toString() + ":00");
-            double giaVe = Double.parseDouble(txtGiaVe.getText().trim());
+            double giaVe = Double.parseDouble(giaVeStr);
 
             Phim phim = new Phim();
             phim.setMaPhim(maPhim);
@@ -501,6 +525,58 @@ public class LichChieuFrameModern extends JFrame {
 
     private void exportToExcel() {
         ExcelExporter.exportTableWithDialog(table, this, "LichChieu");
+    }
+
+    /**
+     * Tạo button chọn ngày nhanh
+     * @param label Nhãn hiển thị trên button
+     * @param daysToAdd Số ngày cộng thêm từ hôm nay
+     * @return JButton được cấu hình
+     */
+    private JButton createQuickDateButton(String label, int daysToAdd) {
+        JButton btn = new JButton(label);
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btn.setFocusPainted(false);
+        btn.setBackground(new Color(230, 230, 230));
+        btn.setForeground(new Color(60, 60, 60));
+        btn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(3, 8, 3, 8)
+        ));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Hover effect
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(UIStyles.PRIMARY_COLOR);
+                btn.setForeground(Color.WHITE);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(new Color(230, 230, 230));
+                btn.setForeground(new Color(60, 60, 60));
+            }
+        });
+
+        btn.addActionListener(e -> {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.add(java.util.Calendar.DAY_OF_MONTH, daysToAdd);
+            java.util.Date selectedDate = cal.getTime();
+
+            // Set date to date picker or text field
+            if (dateChooser != null) {
+                try {
+                    dateChooser.getClass().getMethod("setDate", java.util.Date.class)
+                        .invoke(dateChooser, selectedDate);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } else if (txtNgayChieuFallback != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                txtNgayChieuFallback.setText(sdf.format(selectedDate));
+            }
+        });
+
+        return btn;
     }
 
     private int extractId(String comboBoxItem) {

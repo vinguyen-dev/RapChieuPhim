@@ -206,11 +206,12 @@ public class GheDAO implements IGheDAO {
     }
 
     /**
-     * Tạo ghế tự động cho phòng chiếu theo layout chuẩn
-     * Layout: 6 hàng (A-F) x 10 cột (1-10)
-     * - Hàng A, B, F: Ghế thường
-     * - Hàng C, D: Ghế VIP
-     * - Hàng E: Ghế Couple
+     * Tạo ghế tự động cho phòng chiếu dựa trên số lượng ghế của phòng
+     * Layout động:
+     * - Tính toán số hàng và cột dựa trên tổng số ghế
+     * - Hàng giữa: Ghế VIP
+     * - Hàng áp cuối: Ghế Couple
+     * - Các hàng còn lại: Ghế thường
      *
      * @param maPhong Mã phòng chiếu cần tạo ghế
      * @return true nếu tạo thành công, false nếu thất bại
@@ -228,20 +229,52 @@ public class GheDAO implements IGheDAO {
                 }
             }
 
-            // Create seats for room (6 rows x 10 columns)
+            // Get room info to determine seat count
+            String roomSql = "SELECT soGhe, tenPhong FROM PhongChieu WHERE maPhong = ?";
+            int totalSeats = 60; // Default
+            String roomName = "Phòng " + maPhong;
+
+            try (PreparedStatement roomStmt = conn.prepareStatement(roomSql)) {
+                roomStmt.setInt(1, maPhong);
+                ResultSet roomRs = roomStmt.executeQuery();
+                if (roomRs.next()) {
+                    totalSeats = roomRs.getInt("soGhe");
+                    roomName = roomRs.getString("tenPhong");
+                }
+            }
+
+            // Calculate layout based on total seats
+            // Prefer 10 columns layout (like real cinema)
+            int cols = 10;
+            int rows = (int) Math.ceil((double) totalSeats / cols);
+
+            // Limit to A-Z (26 rows max)
+            if (rows > 26) {
+                rows = 26;
+                cols = (int) Math.ceil((double) totalSeats / rows);
+            }
+
+            System.out.println("Tạo " + totalSeats + " ghế cho " + roomName + " (" + rows + " hàng x " + cols + " cột)");
+
+            // Create seats
             String insertSql = "INSERT INTO Ghe (maPhong, soGhe, hang, loaiGhe) VALUES (?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
                 int seatCount = 0;
+                int vipStartRow = rows / 3; // VIP starts at 1/3
+                int vipEndRow = (rows * 2) / 3; // VIP ends at 2/3
+                int coupleRow = rows - 2; // Couple seat at second-to-last row
 
-                for (char hang = 'A'; hang <= 'F'; hang++) {
-                    for (int cot = 1; cot <= 10; cot++) {
-                        String soGhe = hang + String.valueOf(cot);
+                for (int r = 0; r < rows && seatCount < totalSeats; r++) {
+                    char hang = (char) ('A' + r);
+
+                    for (int c = 1; c <= cols && seatCount < totalSeats; c++) {
+                        String soGhe = hang + String.valueOf(c);
                         String loaiGhe;
 
-                        // Determine seat type based on row
-                        if (hang == 'C' || hang == 'D') {
+                        // Determine seat type based on row position
+                        if (r >= vipStartRow && r < vipEndRow) {
                             loaiGhe = "VIP";
-                        } else if (hang == 'E') {
+                        } else if (r == coupleRow) {
                             loaiGhe = "Couple";
                         } else {
                             loaiGhe = "Thuong";
@@ -257,7 +290,7 @@ public class GheDAO implements IGheDAO {
                 }
 
                 int[] results = stmt.executeBatch();
-                System.out.println("Đã tạo " + seatCount + " ghế cho phòng " + maPhong);
+                System.out.println("✓ Đã tạo " + seatCount + " ghế cho " + roomName);
                 return results.length == seatCount;
             }
         } catch (SQLException e) {
