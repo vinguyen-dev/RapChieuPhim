@@ -24,13 +24,13 @@ public class MainFrame extends JFrame {
         menuBar.setFont(UIStyles.FONT_NORMAL);
 
         // Menu Quản lý
-        JMenu menuQuanLy = new JMenu("📋 Quản Lý");
+        JMenu menuQuanLy = new JMenu("Quản Lý");
         menuQuanLy.setFont(UIStyles.FONT_SUBHEADER);
 
-        JMenuItem itemPhim = new JMenuItem("🎬 Quản Lý Phim");
-        JMenuItem itemPhongChieu = new JMenuItem("🎭 Quản Lý Phòng Chiếu");
-        JMenuItem itemLichChieu = new JMenuItem("📅 Quản Lý Lịch Chiếu");
-        JMenuItem itemKhachHang = new JMenuItem("👥 Quản Lý Khách Hàng");
+        JMenuItem itemPhim = new JMenuItem("Quản Lý Phim");
+        JMenuItem itemPhongChieu = new JMenuItem("Quản Lý Phòng Chiếu");
+        JMenuItem itemLichChieu = new JMenuItem("Quản Lý Lịch Chiếu");
+        JMenuItem itemKhachHang = new JMenuItem("Quản Lý Khách Hàng");
 
         itemPhim.setFont(UIStyles.FONT_NORMAL);
         itemPhongChieu.setFont(UIStyles.FONT_NORMAL);
@@ -48,11 +48,11 @@ public class MainFrame extends JFrame {
         menuQuanLy.add(itemKhachHang);
 
         // Menu Bán vé
-        JMenu menuBanVe = new JMenu("🎫 Bán Vé");
+        JMenu menuBanVe = new JMenu("Bán Vé");
         menuBanVe.setFont(UIStyles.FONT_SUBHEADER);
 
-        JMenuItem itemDatVe = new JMenuItem("🎟️ Đặt Vé");
-        JMenuItem itemHoaDon = new JMenuItem("🧾 Quản Lý Hóa Đơn");
+        JMenuItem itemDatVe = new JMenuItem("Đặt Vé");
+        JMenuItem itemHoaDon = new JMenuItem("Quản Lý Hóa Đơn");
 
         itemDatVe.setFont(UIStyles.FONT_NORMAL);
         itemHoaDon.setFont(UIStyles.FONT_NORMAL);
@@ -64,16 +64,23 @@ public class MainFrame extends JFrame {
         menuBanVe.add(itemHoaDon);
 
         // Menu Hệ thống
-        JMenu menuHeThong = new JMenu("⚙️ Hệ Thống");
+        JMenu menuHeThong = new JMenu("Hệ Thống");
         menuHeThong.setFont(UIStyles.FONT_SUBHEADER);
 
-        JMenuItem itemThoat = new JMenuItem("🚪 Thoát");
+        JMenuItem itemDashboard = new JMenuItem("Dashboard & Thống Kê");
+        itemDashboard.setFont(UIStyles.FONT_NORMAL);
+        itemDashboard.addActionListener(e -> openDashboard());
+
+        JMenuItem itemThoat = new JMenuItem("Thoát");
         itemThoat.setFont(UIStyles.FONT_NORMAL);
         itemThoat.addActionListener(e -> {
             if (UIStyles.showConfirmDialog(this, "Bạn có chắc muốn thoát?")) {
                 System.exit(0);
             }
         });
+
+        menuHeThong.add(itemDashboard);
+        menuHeThong.addSeparator();
         menuHeThong.add(itemThoat);
 
         menuBar.add(menuQuanLy);
@@ -100,7 +107,7 @@ public class MainFrame extends JFrame {
         welcomePanel.setOpaque(false);
         welcomePanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 20, 30));
 
-        JLabel lblWelcome = new JLabel("🎬 HỆ THỐNG QUẢN LÝ RẠP CHIẾU PHIM", SwingConstants.CENTER);
+        JLabel lblWelcome = new JLabel("HỆ THỐNG QUẢN LÝ RẠP CHIẾU PHIM", SwingConstants.CENTER);
         UIStyles.styleTitleLabel(lblWelcome);
         lblWelcome.setForeground(UIStyles.PRIMARY_DARK);
 
@@ -121,12 +128,12 @@ public class MainFrame extends JFrame {
         quickAccessPanel.setOpaque(false);
 
         // Create modern card buttons
-        JPanel btnPhim = createModernCard("🎬", "Quản Lý Phim", "Thêm, sửa, xóa phim", UIStyles.PRIMARY_COLOR, e -> openPhimFrame());
-        JPanel btnPhongChieu = createModernCard("🎭", "Phòng Chiếu", "Quản lý phòng chiếu", new Color(156, 39, 176), e -> openPhongChieuFrame());
-        JPanel btnLichChieu = createModernCard("📅", "Lịch Chiếu", "Lập lịch chiếu phim", new Color(0, 150, 136), e -> openLichChieuFrame());
-        JPanel btnDatVe = createModernCard("🎟️", "Đặt Vé", "Đặt vé xem phim", UIStyles.ACCENT_COLOR, e -> openDatVeFrame());
-        JPanel btnKhachHang = createModernCard("👥", "Khách Hàng", "Quản lý khách hàng", new Color(63, 81, 181), e -> openKhachHangFrame());
-        JPanel btnHoaDon = createModernCard("🧾", "Hóa Đơn", "Quản lý hóa đơn", UIStyles.SUCCESS_COLOR, e -> openHoaDonFrame());
+        JPanel btnPhim = createModernCard("PHIM", "Quản Lý Phim", "Thêm, sửa, xóa phim", UIStyles.PRIMARY_COLOR, e -> openPhimFrame());
+        JPanel btnPhongChieu = createModernCard("PHÒNG", "Phòng Chiếu", "Quản lý phòng chiếu", new Color(156, 39, 176), e -> openPhongChieuFrame());
+        JPanel btnLichChieu = createModernCard("LỊCH", "Lịch Chiếu", "Lập lịch chiếu phim", new Color(0, 150, 136), e -> openLichChieuFrame());
+        JPanel btnDatVe = createModernCard("VÉ", "Đặt Vé", "Đặt vé xem phim", UIStyles.ACCENT_COLOR, e -> openDatVeFrame());
+        JPanel btnKhachHang = createModernCard("KHÁCH", "Khách Hàng", "Quản lý khách hàng", new Color(63, 81, 181), e -> openKhachHangFrame());
+        JPanel btnHoaDon = createModernCard("HĐ", "Hóa Đơn", "Quản lý hóa đơn", UIStyles.SUCCESS_COLOR, e -> openHoaDonFrame());
 
         quickAccessPanel.add(btnPhim);
         quickAccessPanel.add(btnPhongChieu);
@@ -168,9 +175,10 @@ public class MainFrame extends JFrame {
         card.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Icon label
+        // Icon label with text
         JLabel lblIcon = new JLabel(icon, SwingConstants.CENTER);
-        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
+        lblIcon.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        lblIcon.setForeground(accentColor);
 
         // Title label
         JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
@@ -205,12 +213,14 @@ public class MainFrame extends JFrame {
                     BorderFactory.createEmptyBorder(13, 18, 18, 18)
                 ));
                 lblTitle.setForeground(accentColor);
+                lblIcon.setFont(new Font("Segoe UI", Font.BOLD, 36));
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
                 card.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
                 lblTitle.setForeground(UIStyles.TEXT_PRIMARY);
+                lblIcon.setFont(new Font("Segoe UI", Font.BOLD, 32));
             }
         });
 
@@ -247,9 +257,37 @@ public class MainFrame extends JFrame {
         frame.setVisible(true);
     }
 
+    private void openDashboard() {
+        DashboardFrame frame = new DashboardFrame();
+        frame.setVisible(true);
+    }
+
     public static void main(String[] args) {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            // Try to use FlatLaf if available
+            try {
+                Class<?> flatLafClass = Class.forName("com.formdev.flatlaf.FlatLightLaf");
+                UIManager.setLookAndFeel((javax.swing.LookAndFeel) flatLafClass.getDeclaredConstructor().newInstance());
+
+                // FlatLaf customizations for modern appearance
+                UIManager.put("Button.arc", 8);
+                UIManager.put("Component.arc", 8);
+                UIManager.put("ProgressBar.arc", 8);
+                UIManager.put("TextComponent.arc", 8);
+                UIManager.put("ScrollBar.thumbArc", 999);
+                UIManager.put("ScrollBar.thumbInsets", new java.awt.Insets(2, 2, 2, 2));
+                UIManager.put("Table.showHorizontalLines", false);
+                UIManager.put("Table.showVerticalLines", false);
+                UIManager.put("Table.intercellSpacing", new java.awt.Dimension(0, 0));
+
+                System.out.println("✓ FlatLaf initialized successfully!");
+            } catch (ClassNotFoundException e) {
+                // FlatLaf not available, use system look and feel
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                System.out.println("ℹ FlatLaf not found. Using system Look & Feel.");
+                System.out.println("  To enable modern UI, add FlatLaf library:");
+                System.out.println("  com.formdev:flatlaf:3.2.5");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
