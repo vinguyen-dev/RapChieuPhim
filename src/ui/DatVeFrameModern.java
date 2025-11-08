@@ -269,6 +269,7 @@ public class DatVeFrameModern extends JFrame {
         legendPanel.add(createLegendItem("Đã chọn", UIStyles.SEAT_SELECTED));
         legendPanel.add(createLegendItem("Đã đặt", UIStyles.SEAT_OCCUPIED));
         legendPanel.add(createLegendItem("VIP", UIStyles.SEAT_VIP));
+        legendPanel.add(createLegendItem("💑 Couple", new Color(233, 30, 99)));
 
         panel.add(legendPanel, BorderLayout.CENTER);
 
@@ -357,6 +358,22 @@ public class DatVeFrameModern extends JFrame {
             seatsByRow.computeIfAbsent(ghe.getHang(), k -> new ArrayList<>()).add(ghe);
         }
 
+        // Sort seats by seat number (numeric)
+        for (List<Ghe> seats : seatsByRow.values()) {
+            seats.sort((g1, g2) -> {
+                try {
+                    // Extract numeric part from soGhe (e.g., "A1" -> 1, "A10" -> 10)
+                    String num1 = g1.getSoGhe().replaceAll("[^0-9]", "");
+                    String num2 = g2.getSoGhe().replaceAll("[^0-9]", "");
+                    int n1 = num1.isEmpty() ? 0 : Integer.parseInt(num1);
+                    int n2 = num2.isEmpty() ? 0 : Integer.parseInt(num2);
+                    return Integer.compare(n1, n2);
+                } catch (NumberFormatException e) {
+                    return g1.getSoGhe().compareTo(g2.getSoGhe());
+                }
+            });
+        }
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
@@ -374,8 +391,8 @@ public class DatVeFrameModern extends JFrame {
             seatPanel.add(lblRow, gbc);
 
             // Seats in row
-            for (int i = 0; i < seats.size(); i++) {
-                Ghe ghe = seats.get(i);
+            int columnIndex = 1; // Start from column 1 (after row label)
+            for (Ghe ghe : seats) {
                 boolean isOccupied = veDAO.kiemTraGheDaDat(lichChieuHienTai.getMaLichChieu(), ghe.getMaGhe());
 
                 SeatButton.SeatStatus status;
@@ -383,6 +400,8 @@ public class DatVeFrameModern extends JFrame {
                     status = SeatButton.SeatStatus.OCCUPIED;
                 } else if ("VIP".equalsIgnoreCase(ghe.getLoaiGhe())) {
                     status = SeatButton.SeatStatus.VIP_AVAILABLE;
+                } else if ("Couple".equalsIgnoreCase(ghe.getLoaiGhe())) {
+                    status = SeatButton.SeatStatus.COUPLE_AVAILABLE;
                 } else {
                     status = SeatButton.SeatStatus.AVAILABLE;
                 }
@@ -390,9 +409,18 @@ public class DatVeFrameModern extends JFrame {
                 SeatButton seatBtn = new SeatButton(ghe, status);
                 seatBtn.addActionListener(e -> toggleSeat(seatBtn));
 
-                gbc.gridx = i + 1;
-                seatPanel.add(seatBtn, gbc);
+                gbc.gridx = columnIndex;
 
+                // Couple seats occupy 2 columns
+                if ("Couple".equalsIgnoreCase(ghe.getLoaiGhe())) {
+                    gbc.gridwidth = 2;
+                    columnIndex += 2;
+                } else {
+                    gbc.gridwidth = 1;
+                    columnIndex += 1;
+                }
+
+                seatPanel.add(seatBtn, gbc);
                 seatButtons.put(ghe.getMaGhe(), seatBtn);
             }
 
@@ -415,6 +443,8 @@ public class DatVeFrameModern extends JFrame {
             selectedSeats.remove(Integer.valueOf(maGhe));
             if (seatBtn.getStatus() == SeatButton.SeatStatus.VIP_SELECTED) {
                 seatBtn.setStatus(SeatButton.SeatStatus.VIP_AVAILABLE);
+            } else if (seatBtn.getStatus() == SeatButton.SeatStatus.COUPLE_SELECTED) {
+                seatBtn.setStatus(SeatButton.SeatStatus.COUPLE_AVAILABLE);
             } else {
                 seatBtn.setStatus(SeatButton.SeatStatus.AVAILABLE);
             }
@@ -423,6 +453,8 @@ public class DatVeFrameModern extends JFrame {
             selectedSeats.add(maGhe);
             if (seatBtn.getStatus() == SeatButton.SeatStatus.VIP_AVAILABLE) {
                 seatBtn.setStatus(SeatButton.SeatStatus.VIP_SELECTED);
+            } else if (seatBtn.getStatus() == SeatButton.SeatStatus.COUPLE_AVAILABLE) {
+                seatBtn.setStatus(SeatButton.SeatStatus.COUPLE_SELECTED);
             } else {
                 seatBtn.setStatus(SeatButton.SeatStatus.SELECTED);
             }

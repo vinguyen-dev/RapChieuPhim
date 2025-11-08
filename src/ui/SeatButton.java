@@ -17,16 +17,27 @@ public class SeatButton extends JButton {
         SELECTED,
         OCCUPIED,
         VIP_AVAILABLE,
-        VIP_SELECTED
+        VIP_SELECTED,
+        COUPLE_AVAILABLE,
+        COUPLE_SELECTED
     }
 
     public SeatButton(Ghe ghe, SeatStatus initialStatus) {
         this.ghe = ghe;
         this.status = initialStatus;
 
-        setPreferredSize(new Dimension(45, 45));
-        setMinimumSize(new Dimension(45, 45));
-        setMaximumSize(new Dimension(45, 45));
+        // Couple seats are wider
+        boolean isCouple = "Couple".equalsIgnoreCase(ghe.getLoaiGhe());
+        if (isCouple) {
+            setPreferredSize(new Dimension(95, 45));  // Double width + gap
+            setMinimumSize(new Dimension(95, 45));
+            setMaximumSize(new Dimension(95, 45));
+        } else {
+            setPreferredSize(new Dimension(45, 45));
+            setMinimumSize(new Dimension(45, 45));
+            setMaximumSize(new Dimension(45, 45));
+        }
+
         setFocusPainted(false);
         setBorderPainted(false);
         setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -50,7 +61,12 @@ public class SeatButton extends JButton {
     }
 
     private void updateAppearance() {
-        setText(ghe.getSoGhe());
+        // Display seat number with icon for couple seats
+        if ("Couple".equalsIgnoreCase(ghe.getLoaiGhe())) {
+            setText("💑 " + ghe.getSoGhe());
+        } else {
+            setText(ghe.getSoGhe());
+        }
 
         switch (status) {
             case AVAILABLE:
@@ -78,6 +94,16 @@ public class SeatButton extends JButton {
                 setForeground(Color.WHITE);
                 setEnabled(true);
                 break;
+            case COUPLE_AVAILABLE:
+                setBackground(new Color(233, 30, 99)); // Pink for couple
+                setForeground(Color.WHITE);
+                setEnabled(true);
+                break;
+            case COUPLE_SELECTED:
+                setBackground(new Color(194, 24, 91)); // Darker pink
+                setForeground(Color.WHITE);
+                setEnabled(true);
+                break;
         }
     }
 
@@ -86,10 +112,12 @@ public class SeatButton extends JButton {
         switch (status) {
             case AVAILABLE:
             case VIP_AVAILABLE:
+            case COUPLE_AVAILABLE:
                 statusText = "Trống";
                 break;
             case SELECTED:
             case VIP_SELECTED:
+            case COUPLE_SELECTED:
                 statusText = "Đã chọn";
                 break;
             case OCCUPIED:
