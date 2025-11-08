@@ -2,20 +2,20 @@ package ui;
 
 import dao.*;
 import entity.*;
-import net.miginfocom.swing.MigLayout;
 import util.Constants;
 import util.ExcelExporter;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.lang.reflect.Constructor;
 import java.sql.Date;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
- * Modern screening schedule management with JCalendar and MigLayout
+ * Modern screening schedule management with optional JCalendar support
  */
 public class LichChieuFrameModern extends JFrame {
     private LichChieuDAO lichChieuDAO;
@@ -142,44 +142,50 @@ public class LichChieuFrameModern extends JFrame {
             )
         ));
 
-        // Use MigLayout for better form layout
-        panel.setLayout(new MigLayout(
-            "fillx, insets 15",
-            "[right]15[grow,fill]30[right]15[grow,fill]",
-            "[]15[]15[]15[]"
-        ));
+        // Use GridBagLayout for better compatibility
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(7, 7, 7, 7);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Row 1
         JLabel lblMa = new JLabel("Mã Lịch Chiếu:");
         lblMa.setFont(UIStyles.FONT_NORMAL);
-        panel.add(lblMa);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        panel.add(lblMa, gbc);
 
         txtMaLichChieu = new JTextField();
         UIStyles.styleTextField(txtMaLichChieu);
         txtMaLichChieu.setEditable(false);
         txtMaLichChieu.setBackground(new Color(240, 240, 240));
-        panel.add(txtMaLichChieu);
+        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0;
+        panel.add(txtMaLichChieu, gbc);
 
         JLabel lblPhim = new JLabel("Phim:");
         lblPhim.setFont(UIStyles.FONT_NORMAL);
-        panel.add(lblPhim);
+        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0;
+        panel.add(lblPhim, gbc);
 
         cboPhim = new JComboBox<>();
         UIStyles.styleComboBox(cboPhim);
-        panel.add(cboPhim, "wrap");
+        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 1.0;
+        panel.add(cboPhim, gbc);
 
         // Row 2
         JLabel lblPhong = new JLabel("Phòng Chiếu:");
         lblPhong.setFont(UIStyles.FONT_NORMAL);
-        panel.add(lblPhong);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
+        panel.add(lblPhong, gbc);
 
         cboPhongChieu = new JComboBox<>();
         UIStyles.styleComboBox(cboPhongChieu);
-        panel.add(cboPhongChieu);
+        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0;
+        panel.add(cboPhongChieu, gbc);
 
         JLabel lblNgay = new JLabel("Ngày Chiếu:");
         lblNgay.setFont(UIStyles.FONT_NORMAL);
-        panel.add(lblNgay);
+        gbc.gridx = 2; gbc.gridy = 1; gbc.weightx = 0;
+        panel.add(lblNgay, gbc);
 
         // Try to use JCalendar if available
         try {
@@ -195,7 +201,8 @@ public class LichChieuFrameModern extends JFrame {
                 JComponent jc = (JComponent) dateChooser;
                 jc.setFont(UIStyles.FONT_NORMAL);
                 jc.setPreferredSize(new Dimension(200, 36));
-                panel.add(jc, "wrap");
+                gbc.gridx = 3; gbc.gridy = 1; gbc.weightx = 1.0;
+                panel.add(jc, gbc);
             }
 
             System.out.println("✓ JCalendar date picker initialized");
@@ -205,36 +212,40 @@ public class LichChieuFrameModern extends JFrame {
             txtNgayChieuFallback = new JTextField();
             UIStyles.styleTextField(txtNgayChieuFallback);
             txtNgayChieuFallback.setToolTipText("Format: dd/MM/yyyy");
-            panel.add(txtNgayChieuFallback, "wrap");
+            gbc.gridx = 3; gbc.gridy = 1; gbc.weightx = 1.0;
+            panel.add(txtNgayChieuFallback, gbc);
 
             System.out.println("ℹ JCalendar not found. Using text field for date input.");
         } catch (Exception e) {
             e.printStackTrace();
             txtNgayChieuFallback = new JTextField();
             UIStyles.styleTextField(txtNgayChieuFallback);
-            panel.add(txtNgayChieuFallback, "wrap");
+            gbc.gridx = 3; gbc.gridy = 1; gbc.weightx = 1.0;
+            panel.add(txtNgayChieuFallback, gbc);
         }
 
         // Row 3
         JLabel lblGio = new JLabel("Giờ Chiếu:");
         lblGio.setFont(UIStyles.FONT_NORMAL);
-        panel.add(lblGio);
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
+        panel.add(lblGio, gbc);
 
         cboGioChieu = new JComboBox<>(Constants.GIO_CHIEU);
         UIStyles.styleComboBox(cboGioChieu);
-        panel.add(cboGioChieu);
+        gbc.gridx = 1; gbc.gridy = 2; gbc.weightx = 1.0;
+        panel.add(cboGioChieu, gbc);
 
         JLabel lblGia = new JLabel("Giá Vé:");
         lblGia.setFont(UIStyles.FONT_NORMAL);
-        panel.add(lblGia);
+        gbc.gridx = 2; gbc.gridy = 2; gbc.weightx = 0;
+        panel.add(lblGia, gbc);
 
         txtGiaVe = new JTextField();
         UIStyles.styleTextField(txtGiaVe);
-        panel.add(txtGiaVe, "wrap");
+        gbc.gridx = 3; gbc.gridy = 2; gbc.weightx = 1.0;
+        panel.add(txtGiaVe, gbc);
 
         // Row 4 - Buttons
-        panel.add(new JLabel(), "skip"); // Empty cell
-
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         buttonPanel.setOpaque(false);
 
@@ -263,7 +274,8 @@ public class LichChieuFrameModern extends JFrame {
         buttonPanel.add(btnXoa);
         buttonPanel.add(btnLamMoi);
 
-        panel.add(buttonPanel, "span 3");
+        gbc.gridx = 1; gbc.gridy = 3; gbc.gridwidth = 3; gbc.weightx = 1.0;
+        panel.add(buttonPanel, gbc);
 
         return panel;
     }
