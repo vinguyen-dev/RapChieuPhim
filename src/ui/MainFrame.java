@@ -238,7 +238,7 @@ public class MainFrame extends JFrame {
     }
 
     private void openLichChieuFrame() {
-        LichChieuFrame frame = new LichChieuFrame();
+        LichChieuFrameModern frame = new LichChieuFrameModern();
         frame.setVisible(true);
     }
 
