@@ -303,6 +303,81 @@ public class AnimationUtils {
     }
 
     /**
+     * Scale up animation
+     */
+    public static void scaleUp(JComponent component, float targetScale, int duration) {
+        final Dimension originalSize = component.getPreferredSize();
+        final Point originalLocation = component.getLocation();
+
+        if (originalSize == null) return;
+
+        Timer timer = new Timer(10, null);
+        final long startTime = System.currentTimeMillis();
+
+        timer.addActionListener(e -> {
+            long elapsed = System.currentTimeMillis() - startTime;
+            float progress = Math.min(1f, (float) elapsed / duration);
+
+            // Ease out
+            progress = 1 - (float) Math.pow(1 - progress, 2);
+
+            float currentScale = 1 + (targetScale - 1) * progress;
+            int newWidth = (int) (originalSize.width * currentScale);
+            int newHeight = (int) (originalSize.height * currentScale);
+            int newX = originalLocation.x - (newWidth - originalSize.width) / 2;
+            int newY = originalLocation.y - (newHeight - originalSize.height) / 2;
+
+            component.setSize(newWidth, newHeight);
+            component.setLocation(newX, newY);
+
+            if (progress >= 1f) {
+                timer.stop();
+            }
+        });
+
+        timer.start();
+    }
+
+    /**
+     * Scale down animation (back to original)
+     */
+    public static void scaleDown(JComponent component, int duration) {
+        scaleUp(component, 1.0f, duration);
+    }
+
+    /**
+     * Flash animation with color
+     */
+    public static void flash(JComponent component, Color flashColor, int duration) {
+        final Color originalBg = component.getBackground();
+        final boolean wasOpaque = component.isOpaque();
+
+        Timer timer = new Timer(20, null);
+        final long startTime = System.currentTimeMillis();
+
+        timer.addActionListener(e -> {
+            long elapsed = System.currentTimeMillis() - startTime;
+            float progress = Math.min(1f, (float) elapsed / duration);
+
+            // Fade from flash color to original
+            int r = (int) (flashColor.getRed() + (originalBg.getRed() - flashColor.getRed()) * progress);
+            int g = (int) (flashColor.getGreen() + (originalBg.getGreen() - flashColor.getGreen()) * progress);
+            int b = (int) (flashColor.getBlue() + (originalBg.getBlue() - flashColor.getBlue()) * progress);
+
+            component.setBackground(new Color(r, g, b));
+            component.repaint();
+
+            if (progress >= 1f) {
+                component.setBackground(originalBg);
+                component.setOpaque(wasOpaque);
+                timer.stop();
+            }
+        });
+
+        timer.start();
+    }
+
+    /**
      * Loading spinner animation
      */
     public static JComponent createLoadingSpinner(int size, Color color) {
