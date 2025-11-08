@@ -45,7 +45,7 @@ public class ModernUIStyles {
     public static final Font FONT_DISPLAY = new Font("Segoe UI", Font.BOLD, 32);
     public static final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 24);
     public static final Font FONT_HEADER = new Font("Segoe UI", Font.BOLD, 18);
-    public static final Font FONT_SUBHEADER = new Font("Segoe UI", Font.SEMIBOLD, 16);
+    public static final Font FONT_SUBHEADER = new Font("Segoe UI", Font.BOLD, 16);
     public static final Font FONT_NORMAL = new Font("Segoe UI", Font.PLAIN, 14);
     public static final Font FONT_SMALL = new Font("Segoe UI", Font.PLAIN, 12);
 

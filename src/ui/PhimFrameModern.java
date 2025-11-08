@@ -176,6 +176,18 @@ public class PhimFrameModern extends JFrame {
         lblPosterPreview.setBackground(new Color(245, 245, 245));
         lblPosterPreview.setOpaque(true);
         lblPosterPreview.setIcon(createPlaceholderIcon(220, 300));
+        lblPosterPreview.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblPosterPreview.setToolTipText("Click để xem ảnh full size");
+
+        // Click to view full size image
+        lblPosterPreview.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                String imagePath = txtHinhAnh.getText().trim();
+                if (!imagePath.isEmpty()) {
+                    showFullSizeImage(imagePath);
+                }
+            }
+        });
 
         posterPanel.add(lblPosterPreview, BorderLayout.CENTER);
 
@@ -365,19 +377,31 @@ public class PhimFrameModern extends JFrame {
     private void loadPosterPreview(String imagePath) {
         try {
             if (imagePath != null && !imagePath.isEmpty()) {
-                File imgFile = new File("resources/images/movies/" + imagePath);
+                File imgFile;
+
+                // Check if it's an absolute path first
+                File absoluteFile = new File(imagePath);
+                if (absoluteFile.isAbsolute() && absoluteFile.exists()) {
+                    imgFile = absoluteFile;
+                } else {
+                    // Try relative path from resources/images/movies/
+                    imgFile = new File("resources/images/movies/" + imagePath);
+                }
+
                 if (imgFile.exists()) {
                     Image img = ImageIO.read(imgFile);
-                    Image scaled = img.getScaledInstance(220, 300, Image.SCALE_SMOOTH);
-                    lblPosterPreview.setIcon(new ImageIcon(scaled));
-                    return;
+                    if (img != null) {
+                        Image scaled = img.getScaledInstance(220, 300, Image.SCALE_SMOOTH);
+                        lblPosterPreview.setIcon(new ImageIcon(scaled));
+                        return;
+                    }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error loading image: " + e.getMessage());
         }
 
-        // Show placeholder
+        // Show placeholder if image not found or error
         lblPosterPreview.setIcon(createPlaceholderIcon(220, 300));
     }
 
@@ -456,13 +480,32 @@ public class PhimFrameModern extends JFrame {
 
     private void chonFileAnh() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Image files", "jpg", "jpeg", "png", "gif"));
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+            "Image files (*.jpg, *.jpeg, *.png, *.gif)", "jpg", "jpeg", "png", "gif"));
+        fileChooser.setDialogTitle("Chọn Ảnh Poster Phim");
+
         int result = fileChooser.showOpenDialog(this);
 
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
-            txtHinhAnh.setText(selectedFile.getName());
-            loadPosterPreview(selectedFile.getName());
+
+            // Save full path to text field
+            txtHinhAnh.setText(selectedFile.getAbsolutePath());
+
+            // Preview image immediately
+            try {
+                Image img = ImageIO.read(selectedFile);
+                if (img != null) {
+                    Image scaled = img.getScaledInstance(220, 300, Image.SCALE_SMOOTH);
+                    lblPosterPreview.setIcon(new ImageIcon(scaled));
+                    UIStyles.showSuccessMessage(this, "Đã chọn ảnh: " + selectedFile.getName());
+                } else {
+                    UIStyles.showErrorMessage(this, "Không thể đọc file ảnh!");
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                UIStyles.showErrorMessage(this, "Lỗi khi tải ảnh: " + ex.getMessage());
+            }
         }
     }
 
@@ -578,5 +621,80 @@ public class PhimFrameModern extends JFrame {
 
         lblPosterPreview.setIcon(createPlaceholderIcon(220, 300));
         loadMovies();
+    }
+
+    /**
+     * Show full size image in a dialog
+     */
+    private void showFullSizeImage(String imagePath) {
+        try {
+            File imgFile;
+
+            // Check if it's an absolute path
+            File absoluteFile = new File(imagePath);
+            if (absoluteFile.isAbsolute() && absoluteFile.exists()) {
+                imgFile = absoluteFile;
+            } else {
+                // Try relative path
+                imgFile = new File("resources/images/movies/" + imagePath);
+            }
+
+            if (!imgFile.exists()) {
+                UIStyles.showErrorMessage(this, "Không tìm thấy file ảnh: " + imagePath);
+                return;
+            }
+
+            Image img = ImageIO.read(imgFile);
+            if (img == null) {
+                UIStyles.showErrorMessage(this, "Không thể đọc file ảnh!");
+                return;
+            }
+
+            // Create dialog to show full size image
+            JDialog dialog = new JDialog(this, "Xem Ảnh - " + imgFile.getName(), true);
+            dialog.setLayout(new BorderLayout());
+
+            // Scale image to fit screen while maintaining aspect ratio
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            int maxWidth = (int) (screenSize.width * 0.8);
+            int maxHeight = (int) (screenSize.height * 0.8);
+
+            int imgWidth = img.getWidth(null);
+            int imgHeight = img.getHeight(null);
+
+            double scaleX = (double) maxWidth / imgWidth;
+            double scaleY = (double) maxHeight / imgHeight;
+            double scale = Math.min(scaleX, scaleY);
+
+            int scaledWidth = (int) (imgWidth * scale);
+            int scaledHeight = (int) (imgHeight * scale);
+
+            Image scaledImg = img.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
+            JLabel lblImage = new JLabel(new ImageIcon(scaledImg));
+            lblImage.setHorizontalAlignment(SwingConstants.CENTER);
+
+            JScrollPane scrollPane = new JScrollPane(lblImage);
+            scrollPane.setPreferredSize(new Dimension(scaledWidth + 20, scaledHeight + 20));
+
+            dialog.add(scrollPane, BorderLayout.CENTER);
+
+            // Close button
+            JButton btnClose = new JButton("Đóng");
+            UIStyles.styleSecondaryButton(btnClose);
+            btnClose.addActionListener(e -> dialog.dispose());
+
+            JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            bottomPanel.add(btnClose);
+            dialog.add(bottomPanel, BorderLayout.SOUTH);
+
+            dialog.pack();
+            dialog.setLocationRelativeTo(this);
+            dialog.setVisible(true);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            UIStyles.showErrorMessage(this, "Lỗi khi hiển thị ảnh: " + ex.getMessage());
+        }
     }
 }

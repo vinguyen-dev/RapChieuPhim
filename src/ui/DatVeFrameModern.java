@@ -5,6 +5,7 @@ import entity.*;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
