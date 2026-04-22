@@ -107,7 +107,7 @@
 
 - **Hiệu năng:** Thời gian phản hồi các thao tác chính dưới 1 giây.
 - **Bảo mật:** Kiểm tra đầu vào, thiết kế SQL bằng PreparedStatement để giảm thiểu SQL injection.
-- **Tính toàn vẹn:** Sử dụng trigger/约束 để cập nhật tự động các trường liên quan (ví dụ: tổng tiền hóa đơn, số vé đã bán).
+- **Tính toàn vẹn:** Sử dụng trigger để cập nhật tự động các trường liên quan (ví dụ: tổng tiền hóa đơn, số vé đã bán).
 - **Khả năng mở rộng:** Thiết kế module hóa, phân lớp rõ ràng (UI, DAO, Business Logic).
 - **Giao diện:** Responsive trên nhiều độ phân giải, dễ sử dụng cho người quản lý và nhân viên bán vé.
 
